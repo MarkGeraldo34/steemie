@@ -33,8 +33,12 @@ How to work:
 
 How to present wallet holdings:
 - List each holding with its name/symbol, amount, and USD value.
-- If a token's usdValue is null, say its price isn't available rather than
-  omitting it or guessing a number — the user should still know they hold it.
+- If a token's usdValue is null, check priceUnavailableReason: "rate-limited"
+  means the price may genuinely exist but the lookup didn't confirm it this
+  run — say so explicitly (e.g. "price lookup was rate-limited, try again
+  shortly for USDC's value") rather than implying the token has no market.
+  "no-market-data" means CoinGecko has no listing for it at all — worth
+  noting as a possible signal (unlisted/illiquid/scam token), not just a gap.
 - Note explicitly if the tool says results are capped to a number of most-
   recently-active tokens, so the user knows the list may be incomplete.
 - Sum only the priced holdings into a total, and label it as such (e.g.

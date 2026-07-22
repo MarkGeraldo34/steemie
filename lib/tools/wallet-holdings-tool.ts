@@ -6,6 +6,7 @@ import {
   COINGECKO_PLATFORM_IDS,
   NATIVE_COINGECKO_IDS,
   NATIVE_SYMBOLS,
+  type Chain,
 } from '../chains';
 
 const MAX_TOKENS_PRICED = 15;
@@ -42,6 +43,40 @@ async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T)
 }
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// CoinGecko's free/keyless tier caps /simple/token_price/{platform} at ONE
+// contract address per request (error_code 10012 if you send more) —
+// batching many addresses in one call fails the whole request, not just the
+// excess ones. So this fetches price per-token. That tier is also fairly
+// aggressively rate-limited (429s observed under normal testing volume), so
+// 429 specifically gets a longer backoff than a generic error, and callers
+// get told WHY a price is missing (no market data vs. got rate-limited) —
+// a rate-limited lookup should never be presented the same as "no price
+// exists for this token".
+async function fetchTokenPrice(
+  contractAddress: string,
+  chain: Chain,
+): Promise<{ price: number | null; rateLimited: boolean }> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/simple/token_price/${COINGECKO_PLATFORM_IDS[chain]}?contract_addresses=${contractAddress}&vs_currencies=usd`,
+    );
+    if (res.ok) {
+      const data = (await res.json()) as Record<string, { usd?: number }>;
+      return { price: data[contractAddress.toLowerCase()]?.usd ?? null, rateLimited: false };
+    }
+    if (res.status === 429 && attempt < 2) {
+      await sleep(1500 * (attempt + 1));
+      continue;
+    }
+    if (res.status !== 429 && attempt === 0) {
+      await sleep(400);
+      continue;
+    }
+    return { price: null, rateLimited: res.status === 429 };
+  }
+  return { price: null, rateLimited: true };
+}
 
 // Fetches one token's balance, retrying once on rate-limit/error responses
 // rather than silently treating a failed call as a zero balance.
@@ -150,27 +185,25 @@ export const walletHoldingsTool = tool({
       const failedLookups = balances.filter(t => t.lookupFailed);
       const heldTokens = balances.filter(t => !t.lookupFailed && t.amount > 0);
 
-      let prices: Record<string, { usd?: number }> = {};
-      if (heldTokens.length > 0) {
-        const addresses = heldTokens.map(t => t.contractAddress).join(',');
-        const priceRes = await fetch(
-          `https://api.coingecko.com/api/v3/simple/token_price/${COINGECKO_PLATFORM_IDS[chain]}?contract_addresses=${addresses}&vs_currencies=usd`,
-        );
-        if (priceRes.ok) prices = await priceRes.json();
+      // Sequential (concurrency 1), not parallel — CoinGecko's free tier
+      // rate-limits noticeably faster than Etherscan's.
+      const priced: Array<(typeof heldTokens)[number] & { price: number | null; rateLimited: boolean }> = [];
+      for (const t of heldTokens) {
+        const result = await fetchTokenPrice(t.contractAddress, chain);
+        priced.push({ ...t, ...result });
       }
 
-      const tokens = heldTokens.map(t => {
-        const price = prices[t.contractAddress.toLowerCase()]?.usd ?? null;
-        return {
-          name: t.tokenName,
-          symbol: t.tokenSymbol,
-          contractAddress: t.contractAddress,
-          amount: t.amount,
-          usdPrice: price,
-          usdValue: price !== null ? price * t.amount : null,
-        };
-      });
+      const tokens = priced.map(t => ({
+        name: t.tokenName,
+        symbol: t.tokenSymbol,
+        contractAddress: t.contractAddress,
+        amount: t.amount,
+        usdPrice: t.price,
+        usdValue: t.price !== null ? t.price * t.amount : null,
+        priceUnavailableReason: t.price !== null ? null : t.rateLimited ? 'rate-limited' : 'no-market-data',
+      }));
 
+      const rateLimitedTokens = priced.filter(t => t.rateLimited);
       const knownTotalUsd =
         (native.usdValue ?? 0) + tokens.reduce((sum, t) => sum + (t.usdValue ?? 0), 0);
 
@@ -178,9 +211,12 @@ export const walletHoldingsTool = tool({
         candidateTokens.length >= MAX_TOKENS_PRICED
           ? `Limited to the ${MAX_TOKENS_PRICED} most recently-active token contracts; wallet may hold more.`
           : null,
-        'Tokens without a CoinGecko price show usdValue: null rather than a guessed number.',
+        'Tokens without a CoinGecko price show usdValue: null rather than a guessed number — check priceUnavailableReason to see whether that\'s because no market data exists, or the price lookup got rate-limited (in which case the price may actually exist, just unconfirmed this run).',
         failedLookups.length > 0
           ? `Balance lookup failed (after retry) for ${failedLookups.length} token(s): ${failedLookups.map(t => t.tokenSymbol).join(', ')} — their current balance is unknown, not necessarily zero.`
+          : null,
+        rateLimitedTokens.length > 0
+          ? `Price lookup was rate-limited by CoinGecko for ${rateLimitedTokens.length} token(s): ${rateLimitedTokens.map(t => t.tokenSymbol).join(', ')} — their real price may exist but couldn't be confirmed this run.`
           : null,
       ].filter(Boolean);
 
