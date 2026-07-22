@@ -33,6 +33,13 @@ the instructions and tool wiring.
   pricing, requires `ETHERSCAN_API_KEY`). Capped to the 15 most-recently-active
   token contracts per wallet; tokens without a CoinGecko price show as
   `usdValue: null` rather than a guessed number
+
+Both chain-aware tools (`riskAnalysis`, `walletHoldings`) support **33
+EVM chains** through Etherscan's unified V2 API — every mainnet it exposes,
+each cross-verified against CoinGecko's asset-platform data (chain ID,
+CoinGecko platform ID, native gas token, and symbol) rather than guessed. See
+[`lib/chains.ts`](lib/chains.ts) for the full list; add a chain by adding one
+entry to each of the four maps there.
 - `lib/tools/token-sales-tool.ts` — **stubbed**, no free/keyless live source
   exists (DeFiLlama `/raises` is now paywalled; no free ICO calendar API)
 - `lib/tools/raffles-tool.ts` — **stubbed**, no free/keyless live source exists
