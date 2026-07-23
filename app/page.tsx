@@ -47,7 +47,7 @@ export default function Home() {
   return (
     <div className="flex flex-col flex-1 items-center bg-zinc-50 font-sans">
       <main className="flex flex-1 w-full max-w-2xl flex-col py-8 px-4 sm:px-0">
-        <header className="mb-4 border-b-2 border-accent pb-4">
+        <header className="mb-4 border-b-2 border-brand pb-4">
           <div className="flex items-center gap-2">
             <img src="/logo.svg" alt="" className="h-8 w-8 rounded-md" />
             <h1 className="text-xl font-semibold text-brand">
@@ -133,7 +133,7 @@ export default function Home() {
             onChange={e => setInput(e.target.value)}
             disabled={status !== 'ready'}
             placeholder="e.g. Any solid whitelist spots opening this week?"
-            className="flex-1 rounded-full border-2 border-brand/40 bg-brand/10 px-4 py-2 text-sm text-black outline-none focus:border-brand focus:bg-brand/15 disabled:opacity-50 dark:bg-zinc-900 dark:text-zinc-50"
+            className="flex-1 rounded-full border-2 border-brand/40 bg-brand/10 px-4 py-2 text-sm text-accent outline-none focus:border-brand focus:bg-brand/15 disabled:opacity-50"
           />
           <button
             type="submit"
