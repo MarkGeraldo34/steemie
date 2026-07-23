@@ -59,10 +59,6 @@ export default function Home() {
             wallet&apos;s holdings, and get an evidence-based read on whether an opportunity
             looks worth pursuing.
           </p>
-          <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-            Not financial advice. Data sources are stubbed in this build — see README before
-            trusting any results.
-          </div>
         </header>
 
         <div className="flex-1 flex flex-col gap-4 overflow-y-auto pb-4">
