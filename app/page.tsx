@@ -6,6 +6,7 @@ import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { CryptoIntelAgentUIMessage } from '@/lib/agents/crypto-intel-agent';
+import { WalletConnectButton } from '@/components/WalletConnectButton';
 
 const TOOL_LABELS: Record<string, string> = {
   'tool-tokenSales': 'Searching token sales',
@@ -48,11 +49,14 @@ export default function Home() {
     <div className="flex flex-col flex-1 items-center bg-zinc-50 font-sans">
       <main className="flex flex-1 w-full max-w-2xl flex-col py-8 px-4 sm:px-0">
         <header className="mb-4 border-b-2 border-brand pb-4">
-          <div className="flex items-center gap-2">
-            <img src="/logo.svg" alt="" className="h-8 w-8 rounded-md" />
-            <h1 className="text-xl font-semibold text-brand">
-              Steemie
-            </h1>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <img src="/logo.svg" alt="" className="h-8 w-8 rounded-md" />
+              <h1 className="text-xl font-semibold text-brand">
+                Steemie
+              </h1>
+            </div>
+            <WalletConnectButton />
           </div>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             Ask about ongoing token sales, whitelist/NFT mints, trends, or raffles, check a
