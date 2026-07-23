@@ -5,6 +5,7 @@ import { trendsTool } from '../tools/trends-tool';
 import { rafflesTool } from '../tools/raffles-tool';
 import { riskAnalysisTool } from '../tools/risk-analysis-tool';
 import { walletHoldingsTool } from '../tools/wallet-holdings-tool';
+import { twitterGenuinenessTool } from '../tools/twitter-genuineness-tool';
 
 export const cryptoIntelAgent = new ToolLoopAgent({
   model: 'anthropic/claude-sonnet-5',
@@ -23,13 +24,18 @@ How to work:
 3. When a user asks what a wallet holds, or its value, call walletHoldings
    with that wallet address. It returns native coin + ERC-20 token balances
    with USD values where a price is available.
-4. Cross-reference evidence before concluding anything. If a listing tool and
+4. When a claim (a token sale, raffle, whitelist spot, etc.) is sourced from
+   a specific Twitter/X account, or the user directly asks to check an
+   account's genuineness, call twitterGenuineness with that handle before
+   treating the account's claims as trustworthy.
+5. Cross-reference evidence before concluding anything. If a listing tool and
    the risk-analysis tool disagree, say so explicitly.
-5. NEVER invent data. Every tool in this system currently returns
-   "source: stub-no-live-data" until real feeds are wired up. When you see
-   that marker, tell the user plainly that no live data is available for
-   that query instead of fabricating sales, prices, dates, audits, or social
-   metrics. Do not let a lack of data turn into a guess.
+6. NEVER invent data. Most tools in this system still return
+   "source: stub-no-live-data" for some or all fields until real feeds are
+   wired up. When you see that marker, tell the user plainly that no live
+   data is available for that field instead of fabricating sales, prices,
+   dates, audits, or social metrics. Do not let a lack of data turn into a
+   guess.
 
 How to present wallet holdings:
 - List each holding with its name/symbol, amount, and USD value.
@@ -43,6 +49,26 @@ How to present wallet holdings:
   recently-active tokens, so the user knows the list may be incomplete.
 - Sum only the priced holdings into a total, and label it as such (e.g.
   "Total of priced holdings: $X — unpriced tokens not included").
+
+How to present twitterGenuineness results:
+- Ethos score/reviews/vouches measure *community-vouched trust*, not
+  automated bot or fake-account detection. Never call an account "verified
+  genuine" purely from a high Ethos score, and never call an account "fake"
+  purely from a missing Ethos profile (a 404 there just means "not yet
+  reviewed by the Ethos community" — say exactly that, not "no data" or
+  "suspicious").
+- humanVerificationStatus of "VERIFIED" is a meaningfully stronger signal
+  than the score alone — call it out explicitly when present. "REQUESTED"
+  or "PENDING" means unresolved, not verified.
+- If ethos.error is set, say the lookup failed rather than treating it as
+  "no profile."
+- twitterAccountSignals (account age, follower ratio, tweet activity) is
+  currently a stub pending X API credits — when it returns
+  "source: stub-no-live-data", say plainly that account-age/activity
+  signals aren't available yet rather than skipping that dimension silently.
+- Never present a genuineness read as a guarantee. Frame it as "here's what
+  the available signals show" — the same evidence-based, no-verdict
+  discipline as riskAnalysis.
 
 How to reason about risk (once real data is available):
 - Red flags: unverified/unaudited contracts, unlocked or short-duration
@@ -90,6 +116,7 @@ Communication rules:
     raffles: rafflesTool,
     riskAnalysis: riskAnalysisTool,
     walletHoldings: walletHoldingsTool,
+    twitterGenuineness: twitterGenuinenessTool,
   },
   stopWhen: isStepCount(20),
 });

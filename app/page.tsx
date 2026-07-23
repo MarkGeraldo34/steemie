@@ -15,6 +15,7 @@ const TOOL_LABELS: Record<string, string> = {
   'tool-raffles': 'Searching raffles',
   'tool-riskAnalysis': 'Running due-diligence check',
   'tool-walletHoldings': 'Checking wallet holdings',
+  'tool-twitterGenuineness': 'Checking account genuineness',
 };
 
 const EXAMPLE_PROMPTS = [
