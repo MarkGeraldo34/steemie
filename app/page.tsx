@@ -47,7 +47,7 @@ const markdownComponents = {
 };
 
 export default function Home() {
-  const { messages, sendMessage, status } = useChat<CryptoIntelAgentUIMessage>({
+  const { messages, sendMessage, status, setMessages, stop } = useChat<CryptoIntelAgentUIMessage>({
     transport: new DefaultChatTransport({ api: '/api/chat' }),
   });
   const [input, setInput] = useState('');
@@ -59,13 +59,24 @@ export default function Home() {
     }
   };
 
+  const goHome = () => {
+    stop();
+    setMessages([]);
+    setInput('');
+  };
+
   return (
     <div className="flex h-dvh flex-col bg-white font-sans">
       <header className="flex shrink-0 items-center justify-between border-b border-zinc-200 bg-white/90 px-4 py-3 backdrop-blur sm:px-6">
-        <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={goHome}
+          aria-label="Go to home"
+          className="flex items-center gap-2 rounded-md transition-opacity hover:opacity-80"
+        >
           <img src="/logo.svg" alt="" className="h-7 w-7 rounded-full" />
           <span className="text-base font-semibold text-brand">Steemie</span>
-        </div>
+        </button>
         <WalletConnectButton />
       </header>
 
