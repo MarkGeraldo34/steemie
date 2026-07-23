@@ -47,7 +47,7 @@ export default function Home() {
   return (
     <div className="flex flex-col flex-1 items-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex flex-1 w-full max-w-2xl flex-col py-8 px-4 sm:px-0">
-        <header className="mb-4">
+        <header className="mb-4 border-b-2 border-accent pb-4">
           <div className="flex items-center gap-2">
             <img src="/logo.svg" alt="" className="h-8 w-8 rounded-md" />
             <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
@@ -71,7 +71,7 @@ export default function Home() {
               key={message.id}
               className={
                 message.role === 'user'
-                  ? 'self-end max-w-[85%] rounded-2xl bg-black px-4 py-2 text-white dark:bg-zinc-50 dark:text-black'
+                  ? 'self-end max-w-[85%] rounded-2xl bg-accent px-4 py-2 text-accent-ink'
                   : 'self-start max-w-[95%] rounded-2xl bg-white px-4 py-2 text-black shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-900 dark:text-zinc-50 dark:ring-zinc-800'
               }
             >
@@ -105,7 +105,11 @@ export default function Home() {
                       key={i}
                       className="my-1 rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
                     >
-                      {toolPart.state === 'output-available' ? '✓ ' : '… '}
+                      {toolPart.state === 'output-available' ? (
+                        <span className="text-accent">✓ </span>
+                      ) : (
+                        '… '
+                      )}
                       {label}
                       {toolPart.state === 'output-error' && ' (failed)'}
                     </div>
@@ -133,12 +137,12 @@ export default function Home() {
             onChange={e => setInput(e.target.value)}
             disabled={status !== 'ready'}
             placeholder="e.g. Any solid whitelist spots opening this week?"
-            className="flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm text-black outline-none focus:border-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-zinc-50"
+            className="flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm text-black outline-none focus:border-accent disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-accent"
           />
           <button
             type="submit"
             disabled={status !== 'ready'}
-            className="rounded-full bg-black px-5 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
+            className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-ink disabled:opacity-50"
           >
             Send
           </button>
