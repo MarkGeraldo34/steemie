@@ -32,7 +32,9 @@ function getConnectUI() {
   return uiInitPromise;
 }
 
-function extractAddress(session: { namespaces?: Record<string, { accounts?: string[] }> } | undefined) {
+type SessionLike = { namespaces?: Record<string, { accounts?: string[] }> } | undefined;
+
+function extractAddress(session: SessionLike) {
   const account = session?.namespaces?.eip155?.accounts?.[0];
   return account ? (account.split(':').pop() ?? null) : null;
 }
@@ -51,7 +53,7 @@ export function useOkxWallet() {
         setAddress(extractAddress(ui.session));
       }
       ui.on('session_delete', () => setAddress(null));
-      ui.on('accountChanged', session => setAddress(extractAddress(session)));
+      ui.on('accountChanged', (session: SessionLike) => setAddress(extractAddress(session)));
     });
 
     return () => {
