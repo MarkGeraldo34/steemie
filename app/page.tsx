@@ -72,7 +72,11 @@ export default function Home() {
       <main className="flex flex-1 flex-col overflow-y-auto">
         <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 sm:px-6">
           {messages.length === 0 ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-6 py-12 text-center">
+            <div className="relative flex flex-1 flex-col items-center justify-center gap-6 overflow-hidden py-12 text-center">
+              <div className="pointer-events-none absolute inset-0 -z-10">
+                <div className="absolute -top-10 -left-10 h-56 w-56 rounded-full bg-brand/30 blur-3xl" />
+                <div className="absolute top-16 -right-10 h-56 w-56 rounded-full bg-accent/40 blur-3xl" />
+              </div>
               <img src="/logo.svg" alt="" className="h-14 w-14 rounded-full" />
               <div>
                 <h1 className="text-lg font-semibold text-zinc-900">How can I help you today?</h1>
@@ -88,7 +92,7 @@ export default function Home() {
                     key={prompt}
                     type="button"
                     onClick={() => setInput(prompt)}
-                    className="rounded-xl border border-zinc-200 px-3 py-2 text-left text-sm text-zinc-600 transition-colors hover:border-brand/40 hover:bg-brand/5"
+                    className="rounded-xl border border-white/60 bg-white/40 px-3 py-2 text-left text-sm text-zinc-700 shadow-sm backdrop-blur-md transition-colors hover:border-brand/40 hover:bg-white/60"
                   >
                     {prompt}
                   </button>
