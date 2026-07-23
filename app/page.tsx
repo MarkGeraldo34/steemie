@@ -45,7 +45,7 @@ export default function Home() {
   const [input, setInput] = useState('');
 
   return (
-    <div className="flex flex-col flex-1 items-center bg-zinc-50 font-sans dark:bg-black">
+    <div className="flex flex-col flex-1 items-center bg-zinc-50 font-sans">
       <main className="flex flex-1 w-full max-w-2xl flex-col py-8 px-4 sm:px-0">
         <header className="mb-4 border-b-2 border-accent pb-4">
           <div className="flex items-center gap-2">
@@ -133,14 +133,27 @@ export default function Home() {
             onChange={e => setInput(e.target.value)}
             disabled={status !== 'ready'}
             placeholder="e.g. Any solid whitelist spots opening this week?"
-            className="flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm text-black outline-none focus:border-accent disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-accent"
+            className="flex-1 rounded-full border-2 border-brand/40 bg-brand/10 px-4 py-2 text-sm text-black outline-none focus:border-brand focus:bg-brand/15 disabled:opacity-50 dark:bg-zinc-900 dark:text-zinc-50"
           />
           <button
             type="submit"
             disabled={status !== 'ready'}
-            className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-ink disabled:opacity-50"
+            aria-label="Send"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink disabled:opacity-50"
           >
-            Send
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-5 w-5"
+            >
+              <path d="m22 2-7 20-4-9-9-4Z" />
+              <path d="M22 2 11 13" />
+            </svg>
           </button>
         </form>
       </main>
