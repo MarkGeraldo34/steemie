@@ -1,0 +1,22 @@
+<svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+  <rect width="240" height="240" fill="#8B8F5C"/>
+
+  <!-- white leaf shape (bottom-left) -->
+  <path d="M 60 108
+           C 50 120, 28 165, 34 190
+           C 55 205, 95 190, 118 172
+           C 100 140, 75 120, 60 108
+           Z"
+        fill="#FFFFFF" stroke="#20242E" stroke-width="4.5" stroke-linejoin="round"/>
+
+  <!-- white circle (top-right) -->
+  <circle cx="146" cy="84" r="64" fill="#FFFFFF" stroke="#20242E" stroke-width="4.5"/>
+
+  <!-- coral petal shape (bottom-right), drawn last so it sits on top -->
+  <path d="M 169 150
+           C 185 160, 190 200, 176 222
+           C 160 232, 120 215, 108 192
+           C 118 165, 145 150, 169 150
+           Z"
+        fill="#FF9385" stroke="#20242E" stroke-width="4.5" stroke-linejoin="round"/>
+</svg>

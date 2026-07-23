@@ -48,9 +48,12 @@ export default function Home() {
     <div className="flex flex-col flex-1 items-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex flex-1 w-full max-w-2xl flex-col py-8 px-4 sm:px-0">
         <header className="mb-4">
-          <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
-            Steemie
-          </h1>
+          <div className="flex items-center gap-2">
+            <img src="/logo.svg" alt="" className="h-8 w-8 rounded-md" />
+            <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
+              Steemie
+            </h1>
+          </div>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             Ask about ongoing token sales, whitelist/NFT mints, trends, or raffles, check a
             wallet&apos;s holdings, and get an evidence-based read on whether an opportunity
