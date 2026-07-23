@@ -50,7 +50,7 @@ export default function Home() {
         <header className="mb-4 border-b-2 border-accent pb-4">
           <div className="flex items-center gap-2">
             <img src="/logo.svg" alt="" className="h-8 w-8 rounded-md" />
-            <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
+            <h1 className="text-xl font-semibold text-brand">
               Steemie
             </h1>
           </div>
