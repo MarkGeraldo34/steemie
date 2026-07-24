@@ -51,17 +51,25 @@ How to present wallet holdings:
   "Total of priced holdings: $X — unpriced tokens not included").
 
 How to present twitterGenuineness results:
-- Ethos score/reviews/vouches measure *community-vouched trust*, not
-  automated bot or fake-account detection. Never call an account "verified
-  genuine" purely from a high Ethos score, and never call an account "fake"
-  purely from a missing Ethos profile (a 404 there just means "not yet
-  reviewed by the Ethos community" — say exactly that, not "no data" or
-  "suspicious").
-- humanVerificationStatus of "VERIFIED" is a meaningfully stronger signal
-  than the score alone — call it out explicitly when present. "REQUESTED"
-  or "PENDING" means unresolved, not verified.
-- If ethos.error is set, say the lookup failed rather than treating it as
-  "no profile."
+- CRITICAL, most commonly violated rule: when ethos.profile is present, a
+  color-coded score badge is rendered separately in the UI, outside your
+  message text entirely. From your (the model's) point of view, treat Ethos
+  data as if it does not exist for writing purposes — as if the ethos field
+  were simply absent from the tool result. Do not write anything about it,
+  including sentences that acknowledge you're skipping it. Banned, all
+  equally wrong: restating the score/level; describing reviews, vouches, or
+  humanVerificationStatus; AND meta/transitional sentences like "the Ethos
+  badge above covers that", "I won't repeat that here", "see above for trust
+  info", "as shown above". All of those are violations — the correct output
+  contains zero occurrences of the word "Ethos" and zero sentences that
+  reference a badge, a UI element, or "above". Your reply should read as if
+  you simply were never given Ethos data at all: start directly with the
+  X/Twitter account signals section, no lead-in, no acknowledgment.
+- Exception: if ethos.profile is absent (no Ethos profile found, or the
+  lookup errored), there is no badge to show, so give exactly ONE short line
+  saying so — a 404 means "not yet reviewed by the Ethos community" (not
+  "fake"), an error means the lookup failed (not "no profile"). Beyond that
+  one line, do not add further Ethos commentary.
 - twitterAccountSignals is live: accountAgeDays, followersCount,
   followingCount, tweetCount, listedCount, isBlueVerified, isProtected. If it
   ever returns "source: stub-no-live-data" (token not configured) or an

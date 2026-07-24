@@ -19,6 +19,36 @@ import { z } from 'zod';
 
 const ETHOS_CLIENT_HEADER = 'steemie';
 
+export type EthosLevel =
+  | 'untrusted'
+  | 'questionable'
+  | 'neutral'
+  | 'known'
+  | 'established'
+  | 'reputable'
+  | 'exemplary'
+  | 'distinguished'
+  | 'revered'
+  | 'renowned';
+
+const ETHOS_LEVEL_BANDS: { max: number; level: EthosLevel }[] = [
+  { max: 799, level: 'untrusted' },
+  { max: 1199, level: 'questionable' },
+  { max: 1399, level: 'neutral' },
+  { max: 1599, level: 'known' },
+  { max: 1799, level: 'established' },
+  { max: 1999, level: 'reputable' },
+  { max: 2199, level: 'exemplary' },
+  { max: 2399, level: 'distinguished' },
+  { max: 2599, level: 'revered' },
+  { max: 2800, level: 'renowned' },
+];
+
+function ethosScoreLevel(score: number): EthosLevel {
+  return (ETHOS_LEVEL_BANDS.find(band => score <= band.max) ?? ETHOS_LEVEL_BANDS[ETHOS_LEVEL_BANDS.length - 1])
+    .level;
+}
+
 type EthosUserResponse = {
   displayName: string;
   username: string | null;
@@ -50,6 +80,7 @@ export const twitterGenuinenessTool = tool({
       profile?: {
         displayName: string;
         ethosScore: number;
+        level: EthosLevel;
         accountStatus: string;
         humanVerificationStatus: string | null;
         reviewsReceived: { negative: number; neutral: number; positive: number };
@@ -78,6 +109,7 @@ export const twitterGenuinenessTool = tool({
         ethos.profile = {
           displayName: data.displayName,
           ethosScore: data.score,
+          level: ethosScoreLevel(data.score),
           accountStatus: data.status,
           humanVerificationStatus: data.humanVerificationStatus,
           reviewsReceived: data.stats.review.received,

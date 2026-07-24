@@ -7,6 +7,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { CryptoIntelAgentUIMessage } from '@/lib/agents/crypto-intel-agent';
 import { WalletConnectButton } from '@/components/WalletConnectButton';
+import { EthosScoreBadge } from '@/components/EthosScoreBadge';
+import type { EthosLevel } from '@/lib/tools/twitter-genuineness-tool';
 
 const TOOL_LABELS: Record<string, string> = {
   'tool-tokenSales': 'Searching token sales',
@@ -153,18 +155,30 @@ export default function Home() {
                           input?: unknown;
                           output?: unknown;
                         };
+
+                        const ethosProfile =
+                          part.type === 'tool-twitterGenuineness' && toolPart.state === 'output-available'
+                            ? (
+                                toolPart.output as {
+                                  ethos?: { profile?: { ethosScore: number; level: EthosLevel } };
+                                }
+                              )?.ethos?.profile
+                            : undefined;
+
                         return (
-                          <div
-                            key={i}
-                            className="my-1 inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600"
-                          >
-                            {toolPart.state === 'output-available' ? (
-                              <span className="mr-1 text-brand">✓</span>
-                            ) : (
-                              <span className="mr-1">…</span>
+                          <div key={i} className="my-1 flex flex-wrap items-center gap-2">
+                            <div className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600">
+                              {toolPart.state === 'output-available' ? (
+                                <span className="mr-1 text-brand">✓</span>
+                              ) : (
+                                <span className="mr-1">…</span>
+                              )}
+                              {label}
+                              {toolPart.state === 'output-error' && ' (failed)'}
+                            </div>
+                            {ethosProfile && (
+                              <EthosScoreBadge score={ethosProfile.ethosScore} level={ethosProfile.level} />
                             )}
-                            {label}
-                            {toolPart.state === 'output-error' && ' (failed)'}
                           </div>
                         );
                       }
