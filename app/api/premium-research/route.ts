@@ -3,6 +3,12 @@ import { withX402 } from '@x402/next';
 import { cryptoIntelAgent } from '@/lib/agents/crypto-intel-agent';
 import { x402Resource, premiumResearchRouteConfig } from '@/lib/x402-server';
 
+// The research agent runs a multi-step tool loop (X API, Ethos, Etherscan,
+// Claude) that can take longer than the platform default — extend the
+// function timeout so a slow-but-successful run doesn't get killed mid-flight
+// after the buyer has already paid.
+export const maxDuration = 60;
+
 /**
  * Paid alternative to /api/chat: runs the full research agent non-streaming
  * and returns the final report as JSON. Gated behind an x402 payment

@@ -1,5 +1,6 @@
 import { x402ResourceServer, type RouteConfig } from '@x402/core/server';
 import { ExactEvmScheme } from '@x402/evm/exact/server';
+import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { OkxFacilitatorClient } from './okx-facilitator';
 
 const USDT0_ADDRESS = '0x779ded0c9e1022225f8e0630b35a9b54be713736';
@@ -26,4 +27,35 @@ export const premiumResearchRouteConfig: RouteConfig = {
   },
   description: 'Premium evidence-based crypto opportunity research report',
   mimeType: 'application/json',
+  extensions: declareDiscoveryExtension({
+    bodyType: 'json',
+    input: {
+      query: 'Is the ACME token sale on X Layer worth pursuing?',
+    },
+    inputSchema: {
+      properties: {
+        query: {
+          type: 'string',
+          description:
+            'The crypto opportunity or account to research: a token sale, NFT/whitelist mint, raffle, or a Twitter/X handle.',
+        },
+      },
+      required: ['query'],
+    },
+    output: {
+      example: {
+        report:
+          'Evidence-based research report as plain text/markdown, covering the requested opportunity or account.',
+      },
+      schema: {
+        properties: {
+          report: {
+            type: 'string',
+            description: 'The full evidence-based research report.',
+          },
+        },
+        required: ['report'],
+      },
+    },
+  }),
 };
