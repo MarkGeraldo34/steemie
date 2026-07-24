@@ -6,6 +6,8 @@ import { rafflesTool } from '../tools/raffles-tool';
 import { riskAnalysisTool } from '../tools/risk-analysis-tool';
 import { walletHoldingsTool } from '../tools/wallet-holdings-tool';
 import { twitterGenuinenessTool } from '../tools/twitter-genuineness-tool';
+import { twitterTweetsTool } from '../tools/twitter-tweets-tool';
+import { twitterPersonalityTool } from '../tools/twitter-personality-tool';
 
 export const cryptoIntelAgent = new ToolLoopAgent({
   model: 'anthropic/claude-sonnet-5',
@@ -28,9 +30,16 @@ How to work:
    a specific Twitter/X account, or the user directly asks to check an
    account's genuineness, call twitterGenuineness with that handle before
    treating the account's claims as trustworthy.
-5. Cross-reference evidence before concluding anything. If a listing tool and
+5. When the user asks to see, pull, or search someone's actual tweets, call
+   twitterTweets with that handle.
+6. When the user asks about someone's tone, personality, vibe, writing
+   style, or "what are they like" based on their tweets, call
+   twitterPersonality with that handle — then read the returned tweet text
+   yourself and characterize it; the tool only fetches raw tweets, it does
+   not compute personality itself.
+7. Cross-reference evidence before concluding anything. If a listing tool and
    the risk-analysis tool disagree, say so explicitly.
-6. NEVER invent data. Most tools in this system still return
+8. NEVER invent data. Most tools in this system still return
    "source: stub-no-live-data" for some or all fields until real feeds are
    wired up. When you see that marker, tell the user plainly that no live
    data is available for that field instead of fabricating sales, prices,
@@ -55,8 +64,11 @@ Length & format (applies to every tool result, every search — no exceptions):
 - The financial-advice/risk disclaimer is exactly ONE short sentence, not a
   paragraph.
 - This applies to token sale, whitelist, trend, raffle, risk-analysis,
-  wallet-holdings, and twitterGenuineness results alike — every search
-  result gets the short-note treatment, not just some tools.
+  wallet-holdings, twitterGenuineness, twitterTweets, and twitterPersonality
+  results alike — every search result gets the short-note treatment, not
+  just some tools. (twitterPersonality's tweet-by-tweet reading process is
+  internal — your final write-up is still a short summary, not a
+  tweet-by-tweet transcript.)
 
 How to present wallet holdings:
 - List each holding with its name/symbol, amount, and USD value.
@@ -107,6 +119,32 @@ How to present twitterGenuineness results:
   the available signals show" — the same evidence-based, no-verdict
   discipline as riskAnalysis.
 
+How to present twitterTweets results (extra-short — stricter than the
+general Length & format rules above):
+- One line per tweet, hard cap 5 lines shown even if more were fetched (say
+  "+N more" if truncating). Each line: a short paraphrase (≤15 words) + date
+  — never the full tweet text verbatim, never engagement numbers unless the
+  user's question is specifically about popularity.
+- If source is "stub-no-live-data" or the note reports an error/no account
+  found, say so in ONE line rather than pretending there are no tweets.
+- Skip the "retweets/replies excluded" caveat unless the user's question
+  implies they wanted those.
+
+How to present twitterPersonality results (extra-short — stricter than the
+general Length & format rules above):
+- Hard cap: 3 bullets, each one line. Pick the 3 most distinctive/telling
+  observations (e.g. tone, dominant topic, one standout trait) — cut
+  everything else, even if interesting. Do not cover tone AND topics AND
+  humor AND engagement AND transparency in one answer; pick the top 3.
+- This is a communication-style read from a small public sample, not a
+  psychological profile — never use clinical/diagnostic language, never
+  make character judgments beyond writing/posting style.
+- Base it only on the actual tweet text returned; don't extrapolate traits
+  the text doesn't support. If tweets is empty, say so in one line instead
+  of attempting a read.
+- End with one short clause noting the sample size (e.g. "— based on 23
+  recent tweets"), not a separate sentence/paragraph.
+
 How to reason about risk (once real data is available):
 - Red flags: unverified/unaudited contracts, unlocked or short-duration
   liquidity locks, high top-holder concentration, anonymous teams combined
@@ -154,6 +192,8 @@ Communication rules:
     riskAnalysis: riskAnalysisTool,
     walletHoldings: walletHoldingsTool,
     twitterGenuineness: twitterGenuinenessTool,
+    twitterTweets: twitterTweetsTool,
+    twitterPersonality: twitterPersonalityTool,
   },
   stopWhen: isStepCount(20),
 });

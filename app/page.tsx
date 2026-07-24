@@ -18,6 +18,8 @@ const TOOL_LABELS: Record<string, string> = {
   'tool-riskAnalysis': 'Running due-diligence check',
   'tool-walletHoldings': 'Checking wallet holdings',
   'tool-twitterGenuineness': 'Checking account genuineness',
+  'tool-twitterTweets': 'Fetching tweets',
+  'tool-twitterPersonality': 'Analyzing tone & personality',
 };
 
 const EXAMPLE_PROMPTS = [
