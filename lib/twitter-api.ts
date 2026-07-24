@@ -103,6 +103,7 @@ export type XSearchTweet = XTweet & {
   authorUsername: string;
   authorName: string;
   url: string;
+  profileUrl: string;
 };
 
 export type SearchTweetsResult =
@@ -170,6 +171,7 @@ export async function searchRecentTweets(query: string, maxResults: number): Pro
         authorUsername: username,
         authorName: user?.name ?? 'Unknown',
         url: `https://x.com/${username}/status/${t.id}`,
+        profileUrl: `https://x.com/${username}`,
       };
     });
 

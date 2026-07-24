@@ -32,6 +32,7 @@ export const rafflesTool = tool({
         raffles: [] as Array<{
           text: string;
           postedBy: string;
+          postedByProfileUrl: string;
           postedAt: string;
           url: string;
           engagement: { likes: number; retweets: number };
@@ -49,6 +50,7 @@ export const rafflesTool = tool({
       raffles: result.tweets.map(t => ({
         text: t.text,
         postedBy: t.authorUsername,
+        postedByProfileUrl: t.profileUrl,
         postedAt: t.createdAt,
         url: t.url,
         engagement: { likes: t.likeCount, retweets: t.retweetCount },

@@ -27,6 +27,7 @@ export const twitterPersonalityTool = tool({
     if (!result.ok) {
       return {
         handle: username,
+        profileUrl: `https://x.com/${username}`,
         source: result.status === 'no-token' ? 'stub-no-live-data' : 'x-api',
         note: result.message,
         tweets: [] as Array<{
@@ -40,6 +41,7 @@ export const twitterPersonalityTool = tool({
     if (result.tweets.length === 0) {
       return {
         handle: username,
+        profileUrl: `https://x.com/${username}`,
         source: 'x-api',
         note: 'No original tweets found to analyze — the account may only retweet/reply, be new, or have no public tweets.',
         tweets: [],
@@ -48,6 +50,7 @@ export const twitterPersonalityTool = tool({
 
     return {
       handle: username,
+      profileUrl: `https://x.com/${username}`,
       source: 'x-api',
       note: `${result.tweets.length} recent original tweets to analyze. Base your read only on this text — do not assume traits beyond what it supports, and treat this as a communication-style snapshot, not a psychological profile.`,
       tweets: result.tweets.map(t => ({

@@ -20,6 +20,7 @@ export const twitterTweetsTool = tool({
     if (!result.ok) {
       return {
         handle: username,
+        profileUrl: `https://x.com/${username}`,
         source: result.status === 'no-token' ? 'stub-no-live-data' : 'x-api',
         note: result.message,
         tweets: [] as XTweet[],
@@ -28,6 +29,7 @@ export const twitterTweetsTool = tool({
 
     return {
       handle: username,
+      profileUrl: `https://x.com/${username}`,
       source: 'x-api',
       note:
         result.tweets.length === 0

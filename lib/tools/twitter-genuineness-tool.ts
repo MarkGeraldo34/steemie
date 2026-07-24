@@ -206,6 +206,7 @@ export const twitterGenuinenessTool = tool({
 
     return {
       handle: username,
+      profileUrl: `https://x.com/${username}`,
       ethos,
       twitterAccountSignals,
     };
