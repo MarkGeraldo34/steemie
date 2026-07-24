@@ -1,6 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { searchRecentTweets } from '../twitter-api';
+import { attachEthosScoresAndSort, type EthosLevel } from '../ethos-api';
 
 const KEYWORDS = '(raffle OR giveaway OR "WL raffle") (NFT OR whitelist OR crypto OR mint) -is:retweet -is:reply lang:en';
 
@@ -10,9 +11,9 @@ const KEYWORDS = '(raffle OR giveaway OR "WL raffle") (NFT OR whitelist OR crypt
  *
  * These are unverified leads scraped from public posts, not a vetted
  * calendar — raffle/giveaway posts are a common scam vector (fake prizes,
- * phishing links, wallet-drainer sites). The tool does not judge legitimacy;
- * it returns raw candidates for the agent to present with that caveat and
- * cross-check via twitterGenuineness.
+ * phishing links, wallet-drainer sites). Every poster is scored via Ethos
+ * Network and the list is sorted highest-score-first (unrated last) so the
+ * most community-vetted leads surface at the top.
  */
 export const rafflesTool = tool({
   description:
@@ -36,25 +37,30 @@ export const rafflesTool = tool({
           postedAt: string;
           url: string;
           engagement: { likes: number; retweets: number };
+          ethosScore: number | null;
+          ethosLevel: EthosLevel | null;
         }>,
       };
     }
 
+    const rawRaffles = result.tweets.map(t => ({
+      text: t.text,
+      postedBy: t.authorUsername,
+      postedByProfileUrl: t.profileUrl,
+      postedAt: t.createdAt,
+      url: t.url,
+      engagement: { likes: t.likeCount, retweets: t.retweetCount },
+    }));
+    const raffles = await attachEthosScoresAndSort(rawRaffles);
+
     return {
       source: 'x-api-search',
       note:
-        result.tweets.length === 0
+        raffles.length === 0
           ? 'No matching raffle/giveaway tweets found in the last 7 days.'
-          : `${result.tweets.length} recent public tweets mentioning raffles/giveaways (last 7 days, search window only — not exhaustive). These are UNVERIFIED leads, not a vetted calendar; raffle scams (fake prizes, phishing/drainer links) are common. Check the poster via twitterGenuineness before presenting any as a real opportunity.`,
+          : `${raffles.length} recent public tweets mentioning raffles/giveaways (last 7 days, search window only — not exhaustive), sorted by Ethos score (highest/most-vetted first, unrated last). These are UNVERIFIED leads, not a vetted calendar; raffle scams (fake prizes, phishing/drainer links) are common — a decent Ethos score is not a safety guarantee.`,
       filtersApplied: { query: query ?? null },
-      raffles: result.tweets.map(t => ({
-        text: t.text,
-        postedBy: t.authorUsername,
-        postedByProfileUrl: t.profileUrl,
-        postedAt: t.createdAt,
-        url: t.url,
-        engagement: { likes: t.likeCount, retweets: t.retweetCount },
-      })),
+      raffles,
     };
   },
 });

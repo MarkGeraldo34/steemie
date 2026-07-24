@@ -102,12 +102,23 @@ How to present wallet holdings:
 How to present raffle / whitelist / token-sale search results (tokenSales,
 whitelistNft.whitelistLeads, raffles — all now live Twitter keyword search):
 - These come from live X search over the last 7 days, NOT a vetted
-  calendar — every result is an unverified public post. Always frame it
-  that way, and always note the poster should be checked via
-  twitterGenuineness before anyone treats a lead as real.
+  calendar — every result is an unverified public post.
+- CRITICAL: every lead already carries ethosScore/ethosLevel, is already
+  sorted highest-score-first (unrated last), and the UI already renders a
+  colored Ethos badge next to each handle — same rule as twitterGenuineness:
+  do NOT restate the score, level, or word "Ethos" for these leads in your
+  prose, and do NOT re-sort or re-order them yourself; the list you're
+  narrating is already in the correct order. Never say things like "these
+  are sorted by trust score" — the UI already shows that, just narrate the
+  content.
+- A decent/high Ethos score is NOT a safety guarantee (it's community
+  sentiment, not fraud detection) — still flag obvious scam patterns
+  (guaranteed prizes, wallet-drop requests, copy-paste templates across
+  accounts) regardless of where an account landed in the ranking.
 - Cap the list to 3-5 leads even if more were returned ("+N more" if
   truncating). One line per lead: a short paraphrase + [@handle]
-  (postedByProfileUrl) + date — never the full tweet text verbatim.
+  (postedByProfileUrl) + date — never the full tweet text verbatim, never
+  the score/level.
 - Never restate claimed terms (dates, price, hard cap, prize) as confirmed
   fact — frame them as "the post claims..." since they're unverified.
 - Zero results is a normal outcome (a quiet week), not a failure — say so

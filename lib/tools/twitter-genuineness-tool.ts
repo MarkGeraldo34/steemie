@@ -1,68 +1,14 @@
 import { tool } from 'ai';
 import { z } from 'zod';
+import { fetchEthosProfile } from '../ethos-api';
 
 /**
- * Live source (Ethos Network community trust score): free, public, no API
- * key required — just a client-identifying header. See
- * https://developers.ethos.network/.
+ * Live source (Ethos Network community trust score): see lib/ethos-api.ts.
  *
  * Live source (X API v2): account age, follower/following ratio, tweet
  * count, and blue-verified status via GET /2/users/by/username/:username.
  * Requires X_API_BEARER_TOKEN in .env.local (app-only read auth).
- *
- * Important: Ethos measures *community-vouched trust* (peer reviews + ETH
- * vouches), not automated bot/fake-account detection. A brand-new but
- * genuinely real account will have no Ethos profile simply because nobody
- * has reviewed it yet — a 404 here means "unreviewed," not "fake." Pair
- * this with the X account signals for a fuller picture.
  */
-
-const ETHOS_CLIENT_HEADER = 'steemie';
-
-export type EthosLevel =
-  | 'untrusted'
-  | 'questionable'
-  | 'neutral'
-  | 'known'
-  | 'established'
-  | 'reputable'
-  | 'exemplary'
-  | 'distinguished'
-  | 'revered'
-  | 'renowned';
-
-const ETHOS_LEVEL_BANDS: { max: number; level: EthosLevel }[] = [
-  { max: 799, level: 'untrusted' },
-  { max: 1199, level: 'questionable' },
-  { max: 1399, level: 'neutral' },
-  { max: 1599, level: 'known' },
-  { max: 1799, level: 'established' },
-  { max: 1999, level: 'reputable' },
-  { max: 2199, level: 'exemplary' },
-  { max: 2399, level: 'distinguished' },
-  { max: 2599, level: 'revered' },
-  { max: 2800, level: 'renowned' },
-];
-
-function ethosScoreLevel(score: number): EthosLevel {
-  return (ETHOS_LEVEL_BANDS.find(band => score <= band.max) ?? ETHOS_LEVEL_BANDS[ETHOS_LEVEL_BANDS.length - 1])
-    .level;
-}
-
-type EthosUserResponse = {
-  displayName: string;
-  username: string | null;
-  score: number;
-  status: 'ACTIVE' | 'INACTIVE' | 'MERGED';
-  humanVerificationStatus: 'REQUESTED' | 'VERIFIED' | 'REVOKED' | 'PENDING' | null;
-  links: { profile: string; scoreBreakdown: string };
-  stats: {
-    review: { received: { negative: number; neutral: number; positive: number } };
-    vouch: {
-      received: { amountWeiTotal: string; count: number };
-    };
-  };
-};
 
 export const twitterGenuinenessTool = tool({
   description:
@@ -73,59 +19,18 @@ export const twitterGenuinenessTool = tool({
   execute: async ({ handle }) => {
     const username = handle.replace(/^@/, '');
 
-    const ethos: {
-      source: string;
-      note: string;
-      error?: string;
-      profile?: {
-        displayName: string;
-        ethosScore: number;
-        level: EthosLevel;
-        accountStatus: string;
-        humanVerificationStatus: string | null;
-        reviewsReceived: { negative: number; neutral: number; positive: number };
-        vouchesReceived: { count: number; ethTotal: number };
-        profileUrl: string;
-      };
-    } = {
-      source: 'ethos-network',
-      note: '',
-    };
-
-    try {
-      const res = await fetch(
-        `https://api.ethos.network/api/v2/user/by/x/${encodeURIComponent(username)}`,
-        { headers: { 'X-Ethos-Client': ETHOS_CLIENT_HEADER } },
-      );
-
-      if (res.status === 404) {
-        ethos.note =
-          'No Ethos profile found for this handle. This means the crypto community has not reviewed or vouched for this account yet — it does NOT mean the account is fake. Treat reputation as unknown, not negative.';
-      } else if (!res.ok) {
-        ethos.note = 'Ethos API returned an error rather than profile data.';
-        ethos.error = `HTTP ${res.status}`;
-      } else {
-        const data = (await res.json()) as EthosUserResponse;
-        ethos.profile = {
-          displayName: data.displayName,
-          ethosScore: data.score,
-          level: ethosScoreLevel(data.score),
-          accountStatus: data.status,
-          humanVerificationStatus: data.humanVerificationStatus,
-          reviewsReceived: data.stats.review.received,
-          vouchesReceived: {
-            count: data.stats.vouch.received.count,
-            ethTotal: Number(data.stats.vouch.received.amountWeiTotal) / 1e18,
-          },
-          profileUrl: data.links.profile,
+    const ethosResult = await fetchEthosProfile(username);
+    const ethos = ethosResult.ok
+      ? {
+          source: 'ethos-network',
+          note: 'Ethos score reflects community-vouched trust (peer reviews + ETH vouches), not automated bot/fake-account detection.',
+          profile: ethosResult.profile,
+        }
+      : {
+          source: 'ethos-network',
+          note: ethosResult.note,
+          error: ethosResult.error,
         };
-        ethos.note =
-          'Ethos score reflects community-vouched trust (peer reviews + ETH vouches), not automated bot/fake-account detection.';
-      }
-    } catch (err) {
-      ethos.note = 'Ethos lookup failed.';
-      ethos.error = err instanceof Error ? err.message : String(err);
-    }
 
     const twitterAccountSignals: {
       source: string;

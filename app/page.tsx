@@ -8,7 +8,8 @@ import remarkGfm from 'remark-gfm';
 import type { CryptoIntelAgentUIMessage } from '@/lib/agents/crypto-intel-agent';
 import { WalletConnectButton } from '@/components/WalletConnectButton';
 import { EthosScoreBadge } from '@/components/EthosScoreBadge';
-import type { EthosLevel } from '@/lib/tools/twitter-genuineness-tool';
+import { TwitterLeadsList } from '@/components/TwitterLeadsList';
+import type { EthosLevel } from '@/lib/ethos-api';
 
 const TOOL_LABELS: Record<string, string> = {
   'tool-tokenSales': 'Searching token sales',
@@ -185,20 +186,43 @@ export default function Home() {
                               )?.ethos?.profile
                             : undefined;
 
+                        type Lead = {
+                          text: string;
+                          postedBy: string;
+                          postedByProfileUrl: string;
+                          ethosScore: number | null;
+                          ethosLevel: EthosLevel | null;
+                        };
+
+                        let leads: Lead[] | undefined;
+                        if (toolPart.state === 'output-available') {
+                          if (part.type === 'tool-raffles') {
+                            leads = (toolPart.output as { raffles?: Lead[] })?.raffles;
+                          } else if (part.type === 'tool-tokenSales') {
+                            leads = (toolPart.output as { sales?: Lead[] })?.sales;
+                          } else if (part.type === 'tool-whitelistNft') {
+                            leads = (toolPart.output as { whitelistLeads?: { leads?: Lead[] } })?.whitelistLeads
+                              ?.leads;
+                          }
+                        }
+
                         return (
-                          <div key={i} className="my-1 flex flex-wrap items-center gap-2">
-                            <div className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600">
-                              {toolPart.state === 'output-available' ? (
-                                <span className="mr-1 text-brand">✓</span>
-                              ) : (
-                                <span className="mr-1">…</span>
+                          <div key={i} className="my-1 flex flex-col gap-1.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <div className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600">
+                                {toolPart.state === 'output-available' ? (
+                                  <span className="mr-1 text-brand">✓</span>
+                                ) : (
+                                  <span className="mr-1">…</span>
+                                )}
+                                {label}
+                                {toolPart.state === 'output-error' && ' (failed)'}
+                              </div>
+                              {ethosProfile && (
+                                <EthosScoreBadge score={ethosProfile.ethosScore} level={ethosProfile.level} />
                               )}
-                              {label}
-                              {toolPart.state === 'output-error' && ' (failed)'}
                             </div>
-                            {ethosProfile && (
-                              <EthosScoreBadge score={ethosProfile.ethosScore} level={ethosProfile.level} />
-                            )}
+                            {leads && <TwitterLeadsList leads={leads} />}
                           </div>
                         );
                       }

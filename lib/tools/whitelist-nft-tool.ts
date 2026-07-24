@@ -1,6 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { searchRecentTweets } from '../twitter-api';
+import { attachEthosScoresAndSort, type EthosLevel } from '../ethos-api';
 
 type CoinGeckoTrendingNft = {
   name: string;
@@ -71,6 +72,8 @@ export const whitelistNftTool = tool({
         postedAt: string;
         url: string;
         engagement: { likes: number; retweets: number };
+        ethosScore: number | null;
+        ethosLevel: EthosLevel | null;
       }>;
     } = { source: 'x-api-search', note: '', leads: [] };
 
@@ -78,11 +81,7 @@ export const whitelistNftTool = tool({
       whitelistLeads.source = searchResult.status === 'no-token' ? 'stub-no-live-data' : 'x-api-search';
       whitelistLeads.note = searchResult.message;
     } else {
-      whitelistLeads.note =
-        searchResult.tweets.length === 0
-          ? 'No matching whitelist/mint tweets found in the last 7 days.'
-          : `${searchResult.tweets.length} recent public tweets announcing whitelist spots/mints (last 7 days, search window only — not exhaustive). UNVERIFIED leads, not a vetted calendar. Deadline/mint date/price, if stated, are in the tweet text itself — read them yourself rather than assuming structure. Check the poster via twitterGenuineness before presenting any as real.`;
-      whitelistLeads.leads = searchResult.tweets.map(t => ({
+      const rawLeads = searchResult.tweets.map(t => ({
         text: t.text,
         postedBy: t.authorUsername,
         postedByProfileUrl: t.profileUrl,
@@ -90,6 +89,11 @@ export const whitelistNftTool = tool({
         url: t.url,
         engagement: { likes: t.likeCount, retweets: t.retweetCount },
       }));
+      whitelistLeads.leads = await attachEthosScoresAndSort(rawLeads);
+      whitelistLeads.note =
+        whitelistLeads.leads.length === 0
+          ? 'No matching whitelist/mint tweets found in the last 7 days.'
+          : `${whitelistLeads.leads.length} recent public tweets announcing whitelist spots/mints (last 7 days, search window only — not exhaustive), sorted by Ethos score (highest/most-vetted first, unrated last). UNVERIFIED leads, not a vetted calendar — a decent Ethos score is not a safety guarantee. Deadline/mint date/price, if stated, are in the tweet text itself — read them yourself rather than assuming structure.`;
     }
 
     return {

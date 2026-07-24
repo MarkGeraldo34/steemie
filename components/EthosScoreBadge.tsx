@@ -1,4 +1,4 @@
-import type { EthosLevel } from '@/lib/tools/twitter-genuineness-tool';
+import type { EthosLevel } from '@/lib/ethos-api';
 
 const LEVEL_STYLES: Record<EthosLevel, { label: string; bg: string; text: string; border?: string }> = {
   untrusted: { label: 'Untrusted', bg: '#dc2626', text: '#ffffff' },
@@ -13,7 +13,15 @@ const LEVEL_STYLES: Record<EthosLevel, { label: string; bg: string; text: string
   renowned: { label: 'Renowned', bg: '#7e22ce', text: '#ffffff' },
 };
 
-export function EthosScoreBadge({ score, level }: { score: number; level: EthosLevel }) {
+export function EthosScoreBadge({ score, level }: { score: number | null; level: EthosLevel | null }) {
+  if (score === null || level === null) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-300 bg-zinc-50 px-2.5 py-1 text-xs font-semibold text-zinc-500">
+        No Ethos data
+      </span>
+    );
+  }
+
   const style = LEVEL_STYLES[level];
   return (
     <span
