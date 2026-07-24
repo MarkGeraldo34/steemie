@@ -1,5 +1,6 @@
 import { tool } from 'ai';
 import { z } from 'zod';
+import { searchRecentTweets } from '../twitter-api';
 
 type CoinGeckoTrendingNft = {
   name: string;
@@ -9,18 +10,23 @@ type CoinGeckoTrendingNft = {
   floor_price_24h_percentage_change: number;
 };
 
+const KEYWORDS =
+  '(whitelist OR "WL spot" OR mintlist OR "free mint") (NFT OR mint OR collection) -is:retweet -is:reply lang:en';
+
 /**
- * Partial live source: CoinGecko's /search/trending endpoint includes
- * trending NFT collections by market activity (floor price, volume). That's
- * a real signal for "which collections have elevated attention right now",
- * but it is NOT whitelist-deadline or mint-date data — CoinGecko doesn't
- * track that. Whitelist spots live in project Discords/socials with no
- * public API, so `whitelistDeadline`/`mintDate`/`mintPrice` stay stubbed
- * until that's wired to a real source (e.g. a Discord scraper).
+ * Two live sources:
+ *  - CoinGecko's /search/trending: trending NFT collections by market
+ *    activity (floor price, volume) — a real signal, but not whitelist/mint
+ *    dates.
+ *  - X API v2 recent search (last 7 days): public tweets announcing
+ *    whitelist spots / free mints. These are unverified leads scraped from
+ *    posts, not a vetted whitelist calendar — the exact deadline/mint
+ *    date/price live in the tweet text itself (if stated at all) and must
+ *    be read by the agent, not parsed here.
  */
 export const whitelistNftTool = tool({
   description:
-    'Look up NFT collections currently trending by market activity, and (once wired up) upcoming whitelist/mint opportunities.',
+    'Look up NFT collections currently trending by market activity, and recent public tweets announcing whitelist spots / free mints (last 7 days, unverified leads).',
   inputSchema: z.object({
     query: z.string().optional().describe('Collection name or keyword to filter by'),
   }),
@@ -52,6 +58,38 @@ export const whitelistNftTool = tool({
       trendingError = `Failed to fetch trending NFTs: ${err instanceof Error ? err.message : String(err)}`;
     }
 
+    const fullQuery = query ? `${KEYWORDS} ${query}` : KEYWORDS;
+    const searchResult = await searchRecentTweets(fullQuery, 10);
+
+    const whitelistLeads: {
+      source: string;
+      note: string;
+      leads: Array<{
+        text: string;
+        postedBy: string;
+        postedAt: string;
+        url: string;
+        engagement: { likes: number; retweets: number };
+      }>;
+    } = { source: 'x-api-search', note: '', leads: [] };
+
+    if (!searchResult.ok) {
+      whitelistLeads.source = searchResult.status === 'no-token' ? 'stub-no-live-data' : 'x-api-search';
+      whitelistLeads.note = searchResult.message;
+    } else {
+      whitelistLeads.note =
+        searchResult.tweets.length === 0
+          ? 'No matching whitelist/mint tweets found in the last 7 days.'
+          : `${searchResult.tweets.length} recent public tweets announcing whitelist spots/mints (last 7 days, search window only — not exhaustive). UNVERIFIED leads, not a vetted calendar. Deadline/mint date/price, if stated, are in the tweet text itself — read them yourself rather than assuming structure. Check the poster via twitterGenuineness before presenting any as real.`;
+      whitelistLeads.leads = searchResult.tweets.map(t => ({
+        text: t.text,
+        postedBy: t.authorUsername,
+        postedAt: t.createdAt,
+        url: t.url,
+        engagement: { likes: t.likeCount, retweets: t.retweetCount },
+      }));
+    }
+
     return {
       trendingCollections: {
         source: 'coingecko-trending-nfts',
@@ -59,19 +97,7 @@ export const whitelistNftTool = tool({
         error: trendingError,
         collections: trendingCollections,
       },
-      whitelistOpportunities: {
-        source: 'stub-no-live-data',
-        note: 'No live whitelist/mint-date feed is configured. This data lives in project Discords/socials with no public API — wiring this up requires a Discord scraper or manual feed, not a drop-in API.',
-        opportunities: [] as Array<{
-          collection: string;
-          chain: string;
-          whitelistDeadline: string;
-          mintDate: string;
-          mintPrice: string;
-          supply: number;
-          officialUrl: string;
-        }>,
-      },
+      whitelistLeads,
     };
   },
 });

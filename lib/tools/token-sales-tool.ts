@@ -1,26 +1,27 @@
 import { tool } from 'ai';
 import { z } from 'zod';
+import { searchRecentTweets } from '../twitter-api';
+
+const KEYWORDS =
+  '(presale OR "public sale" OR IDO OR "token sale" OR TGE OR "fair launch") -is:retweet -is:reply lang:en';
 
 /**
- * STUB — no free/keyless live source exists for this.
+ * Live source (X API v2 recent search, last 7 days only): searches public
+ * tweets for token-sale announcement keywords. These are unverified leads —
+ * a tweet can state sale terms (dates, hard cap, vesting) in its own text,
+ * but the tool does not parse/trust that text as structured fact; the agent
+ * reads it and treats it as claims from an unverified source.
  *
- * Checked and ruled out:
- *  - DeFiLlama /raises is now paywalled (requires their Pro API plan), and
- *    even on the paid tier it's historical funding rounds, not a live public
- *    sale calendar.
+ * No structured sale-calendar API exists (checked and ruled out):
+ *  - DeFiLlama /raises is paywalled, and even paid it's historical funding
+ *    rounds, not a live public sale calendar.
  *  - CoinGecko has no ICO/public-sale-calendar endpoint.
- *  - Real "ongoing public sale" calendars (ICO Drops, CoinList, etc.) are
- *    proprietary products without public APIs.
- *
- * To make this real: either pay for a data vendor (DeFiLlama Pro, ICO Drops
- * partner feed) or build a scraper against specific launchpads you care
- * about (e.g. individual project APIs).
- * Shape is intentionally structured so the agent can reason over concrete
- * fields rather than free text.
+ *  - Real calendars (ICO Drops, CoinList, etc.) are proprietary, no public
+ *    API.
  */
 export const tokenSalesTool = tool({
   description:
-    'Look up ongoing or upcoming public and private crypto token sales, optionally filtered by chain or category.',
+    'Search recent public tweets (last 7 days) for ongoing/upcoming token sale announcements, optionally filtered by chain or category. Returns unverified leads — sale terms in the tweet text are unverified claims, not confirmed facts.',
   inputSchema: z.object({
     query: z
       .string()
@@ -30,22 +31,42 @@ export const tokenSalesTool = tool({
     saleType: z.enum(['public', 'private', 'any']).default('any'),
   }),
   execute: async ({ query, chain, saleType }) => {
-    // TODO: wire to a real data source. Returning empty + a source note
-    // keeps the agent from inventing sales when no data is configured.
+    const parts = [KEYWORDS];
+    if (query) parts.push(query);
+    if (chain) parts.push(chain);
+    const fullQuery = parts.join(' ');
+
+    const result = await searchRecentTweets(fullQuery, 10);
+
+    if (!result.ok) {
+      return {
+        source: result.status === 'no-token' ? 'stub-no-live-data' : 'x-api-search',
+        note: result.message,
+        filtersApplied: { query: query ?? null, chain: chain ?? null, saleType },
+        sales: [] as Array<{
+          text: string;
+          postedBy: string;
+          postedAt: string;
+          url: string;
+          engagement: { likes: number; retweets: number };
+        }>,
+      };
+    }
+
     return {
-      source: 'stub-no-live-data',
-      note: 'No live token sale feed is configured yet. Wire this tool to a real API (e.g. CoinGecko, DeFiLlama raises, ICO calendars) before trusting results.',
+      source: 'x-api-search',
+      note:
+        result.tweets.length === 0
+          ? 'No matching token-sale tweets found in the last 7 days.'
+          : `${result.tweets.length} recent public tweets mentioning token sales (last 7 days, search window only — not exhaustive; no structured sale calendar exists). UNVERIFIED leads — any dates/hard cap/vesting terms are unverified claims from the tweet text, not confirmed facts. Check the poster via twitterGenuineness before presenting any as real, and never restate sale terms as fact without that caveat.`,
       filtersApplied: { query: query ?? null, chain: chain ?? null, saleType },
-      sales: [] as Array<{
-        project: string;
-        chain: string;
-        saleType: 'public' | 'private';
-        startsAt: string;
-        endsAt: string;
-        hardCap: string;
-        vesting: string;
-        officialUrl: string;
-      }>,
+      sales: result.tweets.map(t => ({
+        text: t.text,
+        postedBy: t.authorUsername,
+        postedAt: t.createdAt,
+        url: t.url,
+        engagement: { likes: t.likeCount, retweets: t.retweetCount },
+      })),
     };
   },
 });
