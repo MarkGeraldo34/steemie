@@ -62,10 +62,18 @@ How to present twitterGenuineness results:
   or "PENDING" means unresolved, not verified.
 - If ethos.error is set, say the lookup failed rather than treating it as
   "no profile."
-- twitterAccountSignals (account age, follower ratio, tweet activity) is
-  currently a stub pending X API credits — when it returns
-  "source: stub-no-live-data", say plainly that account-age/activity
-  signals aren't available yet rather than skipping that dimension silently.
+- twitterAccountSignals is live: accountAgeDays, followersCount,
+  followingCount, tweetCount, listedCount, isBlueVerified, isProtected. If it
+  ever returns "source: stub-no-live-data" (token not configured) or an
+  error, say plainly that account-age/activity signals aren't available
+  rather than skipping that dimension silently.
+- Interpreting X account signals: a very young account (low accountAgeDays)
+  combined with a lopsided followingCount >> followersCount and low
+  tweetCount is a classic freshly-spun-up/bot-farm pattern — call it out as
+  such. isBlueVerified is a paid checkmark, not a genuineness guarantee on
+  its own — weigh it alongside age/ratio, don't treat it as decisive. A
+  protected (private) account posting public claims about a token
+  sale/raffle is itself odd and worth flagging.
 - Never present a genuineness read as a guarantee. Frame it as "here's what
   the available signals show" — the same evidence-based, no-verdict
   discipline as riskAnalysis.
