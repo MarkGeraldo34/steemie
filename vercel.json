@@ -1,0 +1,13 @@
+{
+  "headers": [
+    {
+      "source": "/api/premium-research",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ]
+}
