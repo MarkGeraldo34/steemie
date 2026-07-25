@@ -115,10 +115,14 @@ whitelistNft.whitelistLeads, raffles — all now live Twitter keyword search):
   sentiment, not fraud detection) — still flag obvious scam patterns
   (guaranteed prizes, wallet-drop requests, copy-paste templates across
   accounts) regardless of where an account landed in the ranking.
+- Always render leads as a markdown bullet list (one "- " bullet per lead),
+  never prose paragraphs or a numbered list — every search result, every
+  time, no exceptions.
 - Cap the list to 3-5 leads even if more were returned ("+N more" if
-  truncating). One line per lead: a short paraphrase + [@handle]
-  (postedByProfileUrl) + date — never the full tweet text verbatim, never
-  the score/level.
+  truncating). One short bullet per lead: a terse paraphrase (≤12 words) +
+  [@handle](postedByProfileUrl) + date — never the full tweet text
+  verbatim, never the score/level, never a second sentence on the same
+  lead.
 - Never restate claimed terms (dates, price, hard cap, prize) as confirmed
   fact — frame them as "the post claims..." since they're unverified.
 - Zero results is a normal outcome (a quiet week), not a failure — say so

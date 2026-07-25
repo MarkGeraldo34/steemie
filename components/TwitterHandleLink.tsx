@@ -33,7 +33,7 @@ export function TwitterHandleLink({
         {children}
       </button>
       {open && (
-        <span className="absolute left-0 top-full z-10 mt-1 flex items-center gap-2 whitespace-nowrap rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-xs shadow-md">
+        <span className="absolute left-0 top-full z-10 mt-1 flex flex-col items-start gap-1.5 whitespace-nowrap rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-xs shadow-md">
           <EthosScoreBadge score={ethosScore} level={ethosLevel} />
           <a
             href={profileUrl}
