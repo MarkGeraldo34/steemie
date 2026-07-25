@@ -5,7 +5,9 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useOkxWallet } from '@/lib/wallet/useOkxWallet';
 import { fetchWithWalletPayment, PaymentDeclinedError } from '@/lib/wallet/x402Payer';
-import { markdownComponents } from './markdownComponents';
+import { createMarkdownComponents } from './markdownComponents';
+
+const markdownComponents = createMarkdownComponents();
 
 type Status = 'idle' | 'paying' | 'researching' | 'done' | 'error';
 
