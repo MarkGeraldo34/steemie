@@ -6,8 +6,14 @@ import type { OKXUniversalConnectUI } from '@okxconnect/ui';
 const STEEMIE_ICON =
   'https://static.okx.com/cdn/web3/wallet/marketplace/headimages/agent/avatar/d7432566-80f2-4f64-bae7-d11fd72f6e52.png';
 
-const REQUIRED_CHAINS = ['eip155:1'];
-const OPTIONAL_CHAINS = ['eip155:196', 'eip155:137', 'eip155:56', 'eip155:42161'];
+// X Layer is required, not optional: it's the only chain the x402 payment
+// flow (x402Payer.ts) ever signs on. Connecting with it merely optional
+// meant a wallet could grant a session with no authorization for X Layer at
+// all, so the later signTypedData request on that chain had nothing to
+// approve against and was rejected — this is what made "connect" succeed
+// but "pay" fail.
+const REQUIRED_CHAINS = ['eip155:196'];
+const OPTIONAL_CHAINS = ['eip155:1', 'eip155:137', 'eip155:56', 'eip155:42161'];
 
 let uiInitPromise: Promise<OKXUniversalConnectUI> | null = null;
 
@@ -83,7 +89,7 @@ export function useOkxWallet() {
         namespaces: {
           eip155: {
             chains: REQUIRED_CHAINS,
-            defaultChain: '1',
+            defaultChain: '196',
           },
         },
         optionalNamespaces: {
