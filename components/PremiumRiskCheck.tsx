@@ -4,7 +4,7 @@ import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useOkxWallet } from '@/lib/wallet/useOkxWallet';
-import { fetchWithWalletPayment, PaymentDeclinedError } from '@/lib/wallet/x402Payer';
+import { fetchWithWalletPayment } from '@/lib/wallet/x402Payer';
 import { createMarkdownComponents, type EthosByHandle } from './markdownComponents';
 
 type Status = 'idle' | 'paying' | 'researching' | 'done' | 'error';
@@ -50,13 +50,12 @@ export function PremiumRiskCheck() {
       setStatus('done');
     } catch (err) {
       setStatus('error');
-      setError(
-        err instanceof PaymentDeclinedError
-          ? 'Payment was not completed — the wallet request was cancelled or rejected.'
-          : err instanceof Error
-            ? err.message
-            : 'Something went wrong.',
-      );
+      // Surface the real message rather than a blanket "wallet rejected"
+      // string — PaymentDeclinedError's message IS the underlying cause
+      // (a genuine wallet cancellation, or a real client-side bug), and
+      // masking it made a 100%-reproducible code bug look like normal user
+      // behavior.
+      setError(err instanceof Error ? err.message : 'Something went wrong.');
     }
   };
 
