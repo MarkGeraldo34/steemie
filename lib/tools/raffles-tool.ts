@@ -1,7 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { searchRecentTweets } from '../twitter-api';
-import { attachEthosScoresAndSort, type EthosLevel } from '../ethos-api';
+import { attachEthosScoresAndSort, type EthosLevel, type ProjectHandle } from '../ethos-api';
 
 const KEYWORDS = '(raffle OR giveaway OR "WL raffle") (NFT OR whitelist OR crypto OR mint) -is:retweet -is:reply lang:en';
 
@@ -39,6 +39,7 @@ export const rafflesTool = tool({
           engagement: { likes: number; retweets: number };
           ethosScore: number | null;
           ethosLevel: EthosLevel | null;
+          projectHandle: ProjectHandle | null;
         }>,
       };
     }
@@ -50,6 +51,7 @@ export const rafflesTool = tool({
       postedAt: t.createdAt,
       url: t.url,
       engagement: { likes: t.likeCount, retweets: t.retweetCount },
+      mentionedUsernames: t.mentionedUsernames,
     }));
     const raffles = await attachEthosScoresAndSort(rawRaffles);
 

@@ -113,30 +113,59 @@ export async function fetchEthosProfile(username: string): Promise<EthosLookupRe
   }
 }
 
+export type ProjectHandle = {
+  handle: string;
+  profileUrl: string;
+  ethosScore: number | null;
+  ethosLevel: EthosLevel | null;
+};
+
 /**
- * Attach {ethosScore, ethosLevel} to every lead (by its `postedBy` handle)
+ * Attach {ethosScore, ethosLevel} to every lead (by its `postedBy` handle,
+ * i.e. whoever POSTED it — often a random promoter, not the project itself)
  * and sort descending by score — highest/best Ethos score first, leads with
  * no Ethos profile (unknown reputation) last. Used by raffles/whitelist/
  * token-sales tools so every handle a search surfaces is scored and ordered
  * consistently, not just handles the user explicitly asks to check.
+ *
+ * Also resolves `projectHandle`: the first other account @mentioned in the
+ * tweet (via `mentionedUsernames`, from twitter-api.ts), Ethos-scored the
+ * same way. A promotional post about a sale/raffle/mint almost always tags
+ * the project's own account — this is the presumed project/team handle,
+ * distinct from whoever's merely posting about it, so callers can quote
+ * that account instead of the (often unrelated) poster. `null` when the
+ * tweet tags no one.
  */
-export async function attachEthosScoresAndSort<T extends { postedBy: string }>(
+export async function attachEthosScoresAndSort<T extends { postedBy: string; mentionedUsernames: string[] }>(
   leads: T[],
-): Promise<(T & { ethosScore: number | null; ethosLevel: EthosLevel | null })[]> {
-  const uniqueHandles = Array.from(new Set(leads.map(l => l.postedBy)));
+): Promise<(T & { ethosScore: number | null; ethosLevel: EthosLevel | null; projectHandle: ProjectHandle | null })[]> {
+  const projectCandidates = leads.map(l => l.mentionedUsernames[0]).filter((h): h is string => Boolean(h));
+  const uniqueHandles = Array.from(new Set([...leads.map(l => l.postedBy), ...projectCandidates]));
   const results = await Promise.all(uniqueHandles.map(async handle => [handle, await fetchEthosProfile(handle)] as const));
 
   const scoreByHandle = new Map(
     results.map(([handle, result]) => [
-      handle,
+      handle.toLowerCase(),
       result.ok ? { ethosScore: result.profile.ethosScore, ethosLevel: result.profile.level } : { ethosScore: null, ethosLevel: null },
     ]),
   );
 
-  const enriched = leads.map(lead => ({
-    ...lead,
-    ...(scoreByHandle.get(lead.postedBy) ?? { ethosScore: null, ethosLevel: null }),
-  }));
+  const enriched = leads.map(lead => {
+    const projectCandidate = lead.mentionedUsernames[0];
+    const projectHandle: ProjectHandle | null = projectCandidate
+      ? {
+          handle: projectCandidate,
+          profileUrl: `https://x.com/${projectCandidate}`,
+          ...(scoreByHandle.get(projectCandidate.toLowerCase()) ?? { ethosScore: null, ethosLevel: null }),
+        }
+      : null;
+
+    return {
+      ...lead,
+      ...(scoreByHandle.get(lead.postedBy.toLowerCase()) ?? { ethosScore: null, ethosLevel: null }),
+      projectHandle,
+    };
+  });
 
   enriched.sort((a, b) => (b.ethosScore ?? -1) - (a.ethosScore ?? -1));
 

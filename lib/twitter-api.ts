@@ -104,6 +104,12 @@ export type XSearchTweet = XTweet & {
   authorName: string;
   url: string;
   profileUrl: string;
+  // Other accounts @mentioned in the tweet text, in order of first
+  // appearance, excluding the author's own handle. A promotional post about
+  // a project/sale/raffle almost always tags the project's own account —
+  // this is what lets callers tell "who's promoting this" (the poster) apart
+  // from "who's actually behind it" (the project/team handle, if tagged).
+  mentionedUsernames: string[];
 };
 
 export type SearchTweetsResult =
@@ -127,7 +133,7 @@ export async function searchRecentTweets(query: string, maxResults: number): Pro
     const url = new URL(`${X_API_BASE}/tweets/search/recent`);
     url.searchParams.set('query', query);
     url.searchParams.set('max_results', String(clamped));
-    url.searchParams.set('tweet.fields', 'created_at,public_metrics,author_id');
+    url.searchParams.set('tweet.fields', 'created_at,public_metrics,author_id,entities');
     url.searchParams.set('expansions', 'author_id');
     url.searchParams.set('user.fields', 'username,name');
 
@@ -150,6 +156,7 @@ export async function searchRecentTweets(query: string, maxResults: number): Pro
           quote_count: number;
           impression_count: number;
         };
+        entities?: { mentions?: Array<{ username: string }> };
       }>;
       includes?: { users?: Array<{ id: string; username: string; name: string }> };
     };
@@ -159,6 +166,16 @@ export async function searchRecentTweets(query: string, maxResults: number): Pro
     const tweets: XSearchTweet[] = (data.data ?? []).map(t => {
       const user = usersById.get(t.author_id);
       const username = user?.username ?? 'unknown';
+
+      const seen = new Set<string>([username.toLowerCase()]);
+      const mentionedUsernames: string[] = [];
+      for (const mention of t.entities?.mentions ?? []) {
+        const key = mention.username.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        mentionedUsernames.push(mention.username);
+      }
+
       return {
         id: t.id,
         text: t.text,
@@ -172,6 +189,7 @@ export async function searchRecentTweets(query: string, maxResults: number): Pro
         authorName: user?.name ?? 'Unknown',
         url: `https://x.com/${username}/status/${t.id}`,
         profileUrl: `https://x.com/${username}`,
+        mentionedUsernames,
       };
     });
 

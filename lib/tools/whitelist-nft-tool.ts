@@ -1,7 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { searchRecentTweets } from '../twitter-api';
-import { attachEthosScoresAndSort, type EthosLevel } from '../ethos-api';
+import { attachEthosScoresAndSort, type EthosLevel, type ProjectHandle } from '../ethos-api';
 
 type CoinGeckoTrendingNft = {
   name: string;
@@ -74,6 +74,7 @@ export const whitelistNftTool = tool({
         engagement: { likes: number; retweets: number };
         ethosScore: number | null;
         ethosLevel: EthosLevel | null;
+        projectHandle: ProjectHandle | null;
       }>;
     } = { source: 'x-api-search', note: '', leads: [] };
 
@@ -88,6 +89,7 @@ export const whitelistNftTool = tool({
         postedAt: t.createdAt,
         url: t.url,
         engagement: { likes: t.likeCount, retweets: t.retweetCount },
+        mentionedUsernames: t.mentionedUsernames,
       }));
       whitelistLeads.leads = await attachEthosScoresAndSort(rawLeads);
       whitelistLeads.note =

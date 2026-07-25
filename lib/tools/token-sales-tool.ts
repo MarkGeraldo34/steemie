@@ -1,7 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { searchRecentTweets } from '../twitter-api';
-import { attachEthosScoresAndSort, type EthosLevel } from '../ethos-api';
+import { attachEthosScoresAndSort, type EthosLevel, type ProjectHandle } from '../ethos-api';
 
 const KEYWORDS =
   '(presale OR "public sale" OR IDO OR "token sale" OR TGE OR "fair launch") -is:retweet -is:reply lang:en';
@@ -53,6 +53,7 @@ export const tokenSalesTool = tool({
           engagement: { likes: number; retweets: number };
           ethosScore: number | null;
           ethosLevel: EthosLevel | null;
+          projectHandle: ProjectHandle | null;
         }>,
       };
     }
@@ -64,6 +65,7 @@ export const tokenSalesTool = tool({
       postedAt: t.createdAt,
       url: t.url,
       engagement: { likes: t.likeCount, retweets: t.retweetCount },
+      mentionedUsernames: t.mentionedUsernames,
     }));
     const sales = await attachEthosScoresAndSort(rawSales);
 
