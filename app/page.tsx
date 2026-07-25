@@ -66,7 +66,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-dvh flex-col bg-white font-sans">
+    <div className="flex h-dvh flex-col bg-background font-sans">
       <header className="flex shrink-0 items-center justify-between border-b border-zinc-200 bg-white/90 px-4 py-3 backdrop-blur sm:px-6">
         <button
           type="button"
