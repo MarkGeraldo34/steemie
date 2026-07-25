@@ -38,6 +38,21 @@ function createSigner(address: `0x${string}`, request: WalletRequestFn): ClientE
 
 export class PaymentDeclinedError extends Error {}
 
+// The facilitator's real rejection reason (e.g. after a correctly-signed
+// payment still fails verification) comes back as `error` inside the
+// Payment-Required response — encoded into a response HEADER on a 402, not
+// the JSON body. A caller that only reads the body sees an empty `{}` and
+// no way to tell the user why, even though the reason was right there.
+const FRIENDLY_PAYMENT_ERRORS: Record<string, string> = {
+  insufficient_balance:
+    'Insufficient USD₮0 balance on X Layer — you need at least 0.07 USD₮0 in the connected wallet to complete this payment.',
+};
+
+function friendlyPaymentError(reason: string | undefined): string {
+  if (!reason) return 'Payment was rejected after signing — the facilitator declined it.';
+  return FRIENDLY_PAYMENT_ERRORS[reason] ?? reason;
+}
+
 /**
  * Fetches an x402-gated resource, paying with the connected OKX wallet on X Layer
  * if (and only if) the server responds 402. A free/already-paid response is
@@ -71,8 +86,19 @@ export async function fetchWithWalletPayment(
 
   const paymentHeaders = httpClient.encodePaymentSignatureHeader(paymentPayload);
 
-  return fetch(url, {
+  const second = await fetch(url, {
     ...init,
     headers: { ...(init.headers as Record<string, string> | undefined), ...paymentHeaders },
   });
+
+  if (second.status === 402) {
+    const secondBody = await second
+      .clone()
+      .json()
+      .catch(() => undefined);
+    const rejection = httpClient.getPaymentRequiredResponse(name => second.headers.get(name), secondBody);
+    throw new PaymentDeclinedError(friendlyPaymentError(rejection.error));
+  }
+
+  return second;
 }
