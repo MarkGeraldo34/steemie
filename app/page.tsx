@@ -111,7 +111,7 @@ export default function Home() {
           aria-label="Go to home"
           className="flex items-center gap-2 rounded-md transition-opacity hover:opacity-80"
         >
-          <img src="/logo.svg" alt="" className="h-7 w-7 rounded-full" />
+          <img src="/logo.jpg" alt="" className="h-7 w-7 rounded-full" />
           <span className="text-base font-semibold text-brand">Steemie</span>
         </button>
         <WalletConnectButton />
@@ -125,7 +125,7 @@ export default function Home() {
                 <div className="absolute -top-10 -left-10 h-56 w-56 rounded-full bg-brand/30 blur-3xl" />
                 <div className="absolute top-16 -right-10 h-56 w-56 rounded-full bg-accent/40 blur-3xl" />
               </div>
-              <img src="/logo.svg" alt="" className="h-14 w-14 rounded-full" />
+              <img src="/logo.jpg" alt="" className="h-14 w-14 rounded-full" />
               <div>
                 <h1 className="text-lg font-semibold text-zinc-900">How can I help you today?</h1>
                 <p className="mx-auto mt-2 max-w-md text-sm text-zinc-500">
@@ -156,7 +156,7 @@ export default function Home() {
                   className={message.role === 'user' ? 'flex justify-end' : 'flex items-start gap-2.5'}
                 >
                   {message.role !== 'user' && (
-                    <img src="/logo.svg" alt="" className="mt-0.5 h-6 w-6 shrink-0 rounded-full" />
+                    <img src="/logo.jpg" alt="" className="mt-0.5 h-6 w-6 shrink-0 rounded-full" />
                   )}
                   <div
                     className={
