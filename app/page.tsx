@@ -67,7 +67,7 @@ export default function Home() {
 
   return (
     <div className="flex h-dvh flex-col bg-white font-sans">
-      <header className="flex shrink-0 items-center border-b border-zinc-200 bg-white/90 px-4 py-3 backdrop-blur sm:px-6">
+      <header className="flex shrink-0 items-center justify-between border-b border-zinc-200 bg-white/90 px-4 py-3 backdrop-blur sm:px-6">
         <button
           type="button"
           onClick={goHome}
@@ -77,6 +77,14 @@ export default function Home() {
           <img src="/logo.jpg" alt="" className="h-7 w-7 rounded-full" />
           <span className="text-base font-semibold text-brand">Steemie</span>
         </button>
+        <a
+          href="https://web3.okx.com/xlayer/bridge"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-full border-2 border-brand/40 bg-brand/10 px-3 py-1 text-xs font-medium text-brand transition-opacity hover:opacity-80"
+        >
+          Get USD₮0 on X Layer
+        </a>
       </header>
 
       <main className="flex flex-1 flex-col overflow-y-auto">
