@@ -7,15 +7,27 @@ const X_LAYER = 'eip155:196';
 
 // EIP-712 message fields (value/validAfter/validBefore/nonce/deadline etc.,
 // depending on the payment scheme) come through as native BigInt, which
-// JSON.stringify can't serialize on its own — decimal-string is the
-// standard, widely-compatible wire format for uint256-ish EIP-712 fields.
-// Deep-clones rather than stringifying the whole message: OKX Connect's
-// eth_signTypedData_v4 handler requires params[1] to be an OBJECT (it
-// runs `isRecord(params[1])` and throws "Request params message data
-// error" otherwise) — unlike the JSON-string convention most other
-// wallets/dApps follow for this method.
+// JSON.stringify can't serialize on its own. Deep-clones rather than
+// stringifying the whole message: OKX Connect's eth_signTypedData_v4
+// handler requires params[1] to be an OBJECT (it runs isRecord(params[1])
+// and throws "Request params message data error" otherwise) — unlike the
+// JSON-string convention most other wallets/dApps follow for this method.
+//
+// Encodes as a plain JS number, not a decimal string, whenever the value
+// safely fits: a JSON number is unambiguous (every compliant EIP-712 signer
+// parses it as a number and ABI-encodes it per the declared uint256 type),
+// whereas a bare decimal string was empirically observed to break signing
+// against the real OKX wallet — the facilitator's own verify call reported
+// "Signature verification failed" / invalid_signature even though `payer`
+// correctly matched the connected address, meaning the wallet's signer
+// hashed the struct differently than the facilitator did for that string
+// value. Our field values (USDT0 amounts, unix timestamps) are always far
+// under Number.MAX_SAFE_INTEGER, so the string fallback below is a safety
+// net that should never actually trigger here.
 function sanitizeBigInts<T>(value: T): T {
-  if (typeof value === 'bigint') return value.toString() as unknown as T;
+  if (typeof value === 'bigint') {
+    return (value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : value.toString()) as unknown as T;
+  }
   if (Array.isArray(value)) return value.map(sanitizeBigInts) as unknown as T;
   if (value && typeof value === 'object') {
     return Object.fromEntries(Object.entries(value).map(([key, v]) => [key, sanitizeBigInts(v)])) as T;
