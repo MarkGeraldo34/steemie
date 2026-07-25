@@ -67,15 +67,24 @@ function unwrapOkxEnvelope(parsed: unknown, path: string): unknown {
   return parsed;
 }
 
+// TEMPORARY diagnostic logging: the SDK layer above this only forwards a
+// terse invalidReason code to the client on verify failure (e.g.
+// "invalid_signature") and silently drops any more detailed invalidMessage
+// OKX's facilitator returns. Logging the full request/response here (server
+// logs only, never sent to the client) is the only way to see that detail
+// and pin down exactly which field/value is causing verification to fail.
+// Remove once the payment flow is confirmed working end-to-end.
 async function okxRequest<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
   const bodyStr = body !== undefined ? JSON.stringify(body) : '';
   const headers = buildHeaders(method, path, bodyStr);
+  console.log(`[okx-facilitator] -> ${method} ${path}`, bodyStr);
   const res = await fetch(`${OKX_BASE_URL}${path}`, {
     method,
     headers,
     body: method === 'POST' ? bodyStr : undefined,
   });
   const text = await res.text();
+  console.log(`[okx-facilitator] <- ${method} ${path} (HTTP ${res.status})`, text);
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -85,7 +94,9 @@ async function okxRequest<T>(method: 'GET' | 'POST', path: string, body?: unknow
   if (!res.ok) {
     throw new Error(`OKX facilitator ${path} failed: HTTP ${res.status} — ${JSON.stringify(parsed).slice(0, 300)}`);
   }
-  return unwrapOkxEnvelope(parsed, path) as T;
+  const unwrapped = unwrapOkxEnvelope(parsed, path);
+  console.log(`[okx-facilitator] unwrapped ${path}:`, JSON.stringify(unwrapped));
+  return unwrapped as T;
 }
 
 export class OkxFacilitatorClient implements FacilitatorClient {
