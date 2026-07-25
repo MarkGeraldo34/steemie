@@ -97,7 +97,7 @@ export default function Home() {
               </div>
               <img src="/logo.jpg" alt="" className="h-14 w-14 rounded-full" />
               <div>
-                <h1 className="text-lg font-semibold text-accent">How can I help you today?</h1>
+                <h1 className="text-lg font-semibold text-brand">How can I help you today?</h1>
                 <p className="mx-auto mt-2 max-w-md text-sm text-zinc-500">
                   Ask about ongoing token sales, whitelist/NFT mints, trends, or raffles, check a
                   wallet&apos;s holdings, and get an evidence-based read on whether an opportunity

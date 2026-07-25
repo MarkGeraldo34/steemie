@@ -62,7 +62,7 @@ export function PremiumRiskCheck() {
   return (
     <div className="mx-auto w-full max-w-2xl rounded-2xl border border-brand/30 bg-brand/5 p-4">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-accent">Premium Risk Check</h2>
+        <h2 className="text-sm font-semibold text-brand">Premium Risk Check</h2>
         <span className="rounded-full bg-brand/15 px-2 py-0.5 text-[11px] font-medium text-brand">
           0.07 USDT · X Layer
         </span>
