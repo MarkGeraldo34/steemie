@@ -45,6 +45,21 @@ export function TwitterHandleLink({
     setAlignRight(overflowsRight && !flippingWouldOverflowLeft);
   }, [open]);
 
+  // Close on any click/tap outside this handle — pointerdown covers mouse
+  // and touch alike, and fires before the toggle button's own click, so
+  // clicking a different handle's button still opens that one normally
+  // (this dropdown just closes first).
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [open]);
+
   return (
     <span ref={wrapperRef} className="relative inline-block">
       <button
