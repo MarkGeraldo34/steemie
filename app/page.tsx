@@ -114,13 +114,21 @@ export default function Home() {
             </div>
           ) : (
             <div className="flex flex-1 flex-col gap-5 py-6">
-              {messages.map(message => (
+              {messages.map((message, messageIndex) => {
+                const isLoadingThisMessage =
+                  message.role !== 'user' && messageIndex === messages.length - 1 && status !== 'ready';
+
+                return (
                 <div
                   key={message.id}
                   className={message.role === 'user' ? 'flex justify-end' : 'flex items-start gap-2.5'}
                 >
                   {message.role !== 'user' && (
-                    <img src="/logo.jpg" alt="" className="mt-0.5 h-6 w-6 shrink-0 rounded-full" />
+                    <img
+                      src="/logo.jpg"
+                      alt=""
+                      className={`mt-0.5 h-6 w-6 shrink-0 rounded-full ${isLoadingThisMessage ? 'animate-spin-slow' : ''}`}
+                    />
                   )}
                   <div
                     className={
@@ -144,7 +152,7 @@ export default function Home() {
                             );
                           }
                           return (
-                            <div key={i} className="text-sm leading-relaxed">
+                            <div key={i} className="animate-fade-in-up text-sm leading-relaxed">
                               <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                                 {part.text}
                               </ReactMarkdown>
@@ -170,12 +178,16 @@ export default function Home() {
                               : undefined;
 
                           return (
-                            <div key={i} className="my-1 flex flex-wrap items-center gap-2">
+                            <div key={i} className="animate-fade-in-up my-1 flex flex-wrap items-center gap-2">
                               <div className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600">
                                 {toolPart.state === 'output-available' ? (
-                                  <span className="mr-1 text-brand">✓</span>
+                                  <span className="mr-1.5 text-brand">✓</span>
                                 ) : (
-                                  <span className="mr-1">…</span>
+                                  <span className="mr-1.5 inline-flex items-center gap-0.5">
+                                    <span className="animate-pulse-dot h-1 w-1 rounded-full bg-zinc-400" />
+                                    <span className="animate-pulse-dot h-1 w-1 rounded-full bg-zinc-400 [animation-delay:0.15s]" />
+                                    <span className="animate-pulse-dot h-1 w-1 rounded-full bg-zinc-400 [animation-delay:0.3s]" />
+                                  </span>
                                 )}
                                 {label}
                                 {toolPart.state === 'output-error' && ' (failed)'}
@@ -192,7 +204,8 @@ export default function Home() {
                     })()}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
