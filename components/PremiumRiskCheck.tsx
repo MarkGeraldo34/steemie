@@ -60,7 +60,7 @@ export function PremiumRiskCheck() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-2xl rounded-2xl border border-white/60 bg-white/40 p-4 shadow-sm backdrop-blur-md">
+    <div className="mx-auto w-full max-w-2xl rounded-2xl border border-white/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.65),rgba(255,255,255,0.25))] p-4 shadow-[0_12px_40px_-8px_rgba(31,41,55,0.25),inset_0_1px_1px_rgba(255,255,255,0.9),inset_0_-1px_2px_rgba(0,0,0,0.05)] backdrop-blur-xl">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-brand">Premium Risk Check</h2>
         <span className="rounded-full bg-brand/15 px-2 py-0.5 text-[11px] font-medium text-brand">
