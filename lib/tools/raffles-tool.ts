@@ -1,7 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { searchRecentTweets } from '../twitter-api';
-import { attachEthosScoresAndSort, type EthosLevel, type ProjectHandle } from '../ethos-api';
+import { resolveProjectHandlesAndSort, type ProjectHandle } from '../ethos-api';
 
 const KEYWORDS = '(raffle OR giveaway OR "WL raffle") (NFT OR whitelist OR crypto OR mint) -is:retweet -is:reply lang:en';
 
@@ -11,13 +11,15 @@ const KEYWORDS = '(raffle OR giveaway OR "WL raffle") (NFT OR whitelist OR crypt
  *
  * These are unverified leads scraped from public posts, not a vetted
  * calendar — raffle/giveaway posts are a common scam vector (fake prizes,
- * phishing links, wallet-drainer sites). Every poster is scored via Ethos
- * Network and the list is sorted highest-score-first (unrated last) so the
- * most community-vetted leads surface at the top.
+ * phishing links, wallet-drainer sites). Only leads that actually @mention a
+ * project/team account are kept (whoever merely posted about it is dropped
+ * entirely — see ethos-api.ts's resolveProjectHandlesAndSort), and the list
+ * is sorted by engagement (likes + retweets) — highest-interaction leads
+ * about the topic surface first.
  */
 export const rafflesTool = tool({
   description:
-    'Search recent public tweets (last 7 days) for ongoing crypto/NFT raffles and giveaways. Returns unverified leads, not a vetted calendar — cross-check the poster before treating any result as legitimate.',
+    'Search recent public tweets (last 7 days) for ongoing crypto/NFT raffles and giveaways. Returns unverified leads, not a vetted calendar — cross-check the project account before treating any result as legitimate.',
   inputSchema: z.object({
     query: z.string().optional().describe('Project or keyword to filter by'),
   }),
@@ -32,14 +34,10 @@ export const rafflesTool = tool({
         filtersApplied: { query: query ?? null },
         raffles: [] as Array<{
           text: string;
-          postedBy: string;
-          postedByProfileUrl: string;
           postedAt: string;
           url: string;
           engagement: { likes: number; retweets: number };
-          ethosScore: number | null;
-          ethosLevel: EthosLevel | null;
-          projectHandle: ProjectHandle | null;
+          projectHandle: ProjectHandle;
         }>,
       };
     }
@@ -47,20 +45,19 @@ export const rafflesTool = tool({
     const rawRaffles = result.tweets.map(t => ({
       text: t.text,
       postedBy: t.authorUsername,
-      postedByProfileUrl: t.profileUrl,
       postedAt: t.createdAt,
       url: t.url,
       engagement: { likes: t.likeCount, retweets: t.retweetCount },
       mentionedUsernames: t.mentionedUsernames,
     }));
-    const raffles = await attachEthosScoresAndSort(rawRaffles);
+    const raffles = await resolveProjectHandlesAndSort(rawRaffles);
 
     return {
       source: 'x-api-search',
       note:
         raffles.length === 0
-          ? 'No matching raffle/giveaway tweets found in the last 7 days.'
-          : `${raffles.length} recent public tweets mentioning raffles/giveaways (last 7 days, search window only — not exhaustive), sorted by Ethos score (highest/most-vetted first, unrated last). These are UNVERIFIED leads, not a vetted calendar; raffle scams (fake prizes, phishing/drainer links) are common — a decent Ethos score is not a safety guarantee.`,
+          ? 'No matching raffle/giveaway leads with an identifiable project/team account found in the last 7 days.'
+          : `${raffles.length} recent public tweets mentioning raffles/giveaways (last 7 days, search window only — not exhaustive), each naming a project/team account, sorted by engagement (likes + retweets, highest first). These are UNVERIFIED leads, not a vetted calendar; raffle scams (fake prizes, phishing/drainer links) are common — a decent Ethos score is not a safety guarantee.`,
       filtersApplied: { query: query ?? null },
       raffles,
     };

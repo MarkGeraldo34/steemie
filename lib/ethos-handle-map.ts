@@ -2,11 +2,7 @@ import type { EthosByHandle } from '@/components/markdownComponents';
 import type { EthosLevel } from './ethos-api';
 
 type Lead = {
-  postedBy: string;
-  postedByProfileUrl: string;
-  ethosScore: number | null;
-  ethosLevel: EthosLevel | null;
-  projectHandle: { handle: string; profileUrl: string; ethosScore: number | null; ethosLevel: EthosLevel | null } | null;
+  projectHandle: { handle: string; profileUrl: string; ethosScore: number | null; ethosLevel: EthosLevel | null };
 };
 
 type ToolOutputEntry = { toolName: string; output: unknown };
@@ -55,10 +51,7 @@ export function collectEthosByHandle(toolOutputs: ToolOutputEntry[]): EthosByHan
       leads = (output as { whitelistLeads?: { leads?: Lead[] } })?.whitelistLeads?.leads;
     }
     for (const lead of leads ?? []) {
-      add(lead.postedBy, lead.postedByProfileUrl, lead.ethosScore, lead.ethosLevel);
-      if (lead.projectHandle) {
-        add(lead.projectHandle.handle, lead.projectHandle.profileUrl, lead.projectHandle.ethosScore, lead.projectHandle.ethosLevel);
-      }
+      add(lead.projectHandle.handle, lead.projectHandle.profileUrl, lead.projectHandle.ethosScore, lead.projectHandle.ethosLevel);
     }
   }
 
