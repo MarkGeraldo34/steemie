@@ -60,8 +60,8 @@ export function PremiumRiskCheck() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-2xl rounded-2xl border border-brand/30 bg-brand/5 p-4">
-      <div className="mb-2 flex items-center justify-between gap-2">
+    <div className="mx-auto w-full max-w-2xl rounded-2xl border border-white/60 bg-white/40 p-4 shadow-sm backdrop-blur-md">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-brand">Premium Risk Check</h2>
         <span className="rounded-full bg-brand/15 px-2 py-0.5 text-[11px] font-medium text-brand">
           0.07 USDT · X Layer
@@ -77,19 +77,19 @@ export function PremiumRiskCheck() {
           e.preventDefault();
           submit();
         }}
-        className="flex items-center gap-2"
+        className="flex flex-col gap-2 sm:flex-row sm:items-center"
       >
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
           disabled={busy}
           placeholder="Paste a link, contract address, or describe the opportunity…"
-          className="flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 outline-none transition-colors focus:border-brand disabled:opacity-50"
+          className="min-w-0 flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 outline-none transition-colors focus:border-brand disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={busy || connecting || !query.trim()}
-          className="shrink-0 rounded-full bg-brand px-4 py-2 text-xs font-medium text-white transition-opacity disabled:opacity-50"
+          className="w-full shrink-0 rounded-full bg-brand px-4 py-2 text-xs font-medium text-white transition-opacity disabled:opacity-50 sm:w-auto"
         >
           {!address
             ? connecting
