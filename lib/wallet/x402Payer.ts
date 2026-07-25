@@ -6,15 +6,21 @@ import type { WalletRequestFn } from './useOkxWallet';
 const X_LAYER = 'eip155:196';
 
 // EIP-712 message fields (value/validAfter/validBefore/nonce/deadline etc.,
-// depending on the payment scheme) come through as native BigInt — plain
-// JSON.stringify throws "Do not know how to serialize a BigInt" on those,
-// synchronously, before the wallet is ever prompted. Every payment attempt
-// hit this unconditionally; it only ever looked like a wallet-side
-// rejection because the UI layer masked the real error (see
-// PremiumRiskCheck.tsx). Decimal-string is the standard, widely-compatible
-// wire format wallets expect for uint256-ish EIP-712 fields.
-function stringifyTypedData(message: unknown): string {
-  return JSON.stringify(message, (_key, value) => (typeof value === 'bigint' ? value.toString() : value));
+// depending on the payment scheme) come through as native BigInt, which
+// JSON.stringify can't serialize on its own — decimal-string is the
+// standard, widely-compatible wire format for uint256-ish EIP-712 fields.
+// Deep-clones rather than stringifying the whole message: OKX Connect's
+// eth_signTypedData_v4 handler requires params[1] to be an OBJECT (it
+// runs `isRecord(params[1])` and throws "Request params message data
+// error" otherwise) — unlike the JSON-string convention most other
+// wallets/dApps follow for this method.
+function sanitizeBigInts<T>(value: T): T {
+  if (typeof value === 'bigint') return value.toString() as unknown as T;
+  if (Array.isArray(value)) return value.map(sanitizeBigInts) as unknown as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, v]) => [key, sanitizeBigInts(v)])) as T;
+  }
+  return value;
 }
 
 function createSigner(address: `0x${string}`, request: WalletRequestFn): ClientEvmSigner {
@@ -22,7 +28,7 @@ function createSigner(address: `0x${string}`, request: WalletRequestFn): ClientE
     address,
     async signTypedData(message) {
       const signature = await request(
-        { method: 'eth_signTypedData_v4', params: [address, stringifyTypedData(message)] },
+        { method: 'eth_signTypedData_v4', params: [address, sanitizeBigInts(message)] },
         X_LAYER,
       );
       return signature as `0x${string}`;
