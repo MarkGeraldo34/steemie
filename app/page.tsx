@@ -6,7 +6,6 @@ import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { CryptoIntelAgentUIMessage } from '@/lib/agents/crypto-intel-agent';
-import { WalletConnectButton } from '@/components/WalletConnectButton';
 import { EthosScoreBadge } from '@/components/EthosScoreBadge';
 import { PremiumRiskCheck } from '@/components/PremiumRiskCheck';
 import { createMarkdownComponents, type EthosByHandle } from '@/components/markdownComponents';
@@ -68,7 +67,7 @@ export default function Home() {
 
   return (
     <div className="flex h-dvh flex-col bg-white font-sans">
-      <header className="flex shrink-0 items-center justify-between border-b border-zinc-200 bg-white/90 px-4 py-3 backdrop-blur sm:px-6">
+      <header className="flex shrink-0 items-center border-b border-zinc-200 bg-white/90 px-4 py-3 backdrop-blur sm:px-6">
         <button
           type="button"
           onClick={goHome}
@@ -78,7 +77,6 @@ export default function Home() {
           <img src="/logo.jpg" alt="" className="h-7 w-7 rounded-full" />
           <span className="text-base font-semibold text-brand">Steemie</span>
         </button>
-        <WalletConnectButton />
       </header>
 
       <main className="flex flex-1 flex-col overflow-y-auto">

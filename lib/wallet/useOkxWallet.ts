@@ -67,6 +67,14 @@ export function useOkxWallet() {
   }, []);
 
   const connect = useCallback(async () => {
+    // The underlying OKX Connect SDK registers a fresh one-shot listener on
+    // its shared connect signal each time openModal() runs, with no visible
+    // cleanup if a prior call is still in flight — a second concurrent call
+    // can cross-wire with the first and surface as a spurious rejection.
+    // This is the same reason the redundant header wallet button was
+    // removed (a second independent connect() call site); guard here too so
+    // no future caller can reintroduce the same race.
+    if (connecting) return;
     setConnecting(true);
     setError(null);
     try {
@@ -90,7 +98,7 @@ export function useOkxWallet() {
     } finally {
       setConnecting(false);
     }
-  }, []);
+  }, [connecting]);
 
   const disconnect = useCallback(async () => {
     const ui = await getConnectUI();
