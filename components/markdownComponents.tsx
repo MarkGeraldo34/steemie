@@ -25,6 +25,13 @@ export function createMarkdownComponents(ethosByHandle: EthosByHandle = {}) {
     ul: (props: React.ComponentProps<'ul'>) => <ul className="mb-2 list-disc space-y-0.5 pl-5 text-sm last:mb-0" {...props} />,
     ol: (props: React.ComponentProps<'ol'>) => <ol className="mb-2 list-decimal space-y-0.5 pl-5 text-sm last:mb-0" {...props} />,
     strong: (props: React.ComponentProps<'strong'>) => <strong className="font-semibold" {...props} />,
+    // The agent always renders its financial-advice/risk disclaimer as a
+    // blockquote (see crypto-intel-agent.ts Communication rules) — this is
+    // the styled color that gives it, regardless of the exact wording,
+    // which varies response to response.
+    blockquote: (props: React.ComponentProps<'blockquote'>) => (
+      <blockquote className="mb-2 border-l-2 border-brand/40 pl-2 text-sm italic text-brand last:mb-0" {...props} />
+    ),
     a: ({ href, children }: React.ComponentProps<'a'>) => {
       const match = href ? X_PROFILE_URL_RE.exec(href) : null;
       if (!match) {
