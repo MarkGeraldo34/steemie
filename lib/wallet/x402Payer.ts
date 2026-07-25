@@ -35,14 +35,44 @@ function sanitizeBigInts<T>(value: T): T {
   return value;
 }
 
+// Canonical EIP-712 domain field order/types per the spec. @x402/evm's
+// signTypedData callers never include an explicit `types.EIP712Domain`
+// entry — lenient signers (viem, MetaMask, ethers) auto-derive it from the
+// domain object's own keys, but that's an implementation courtesy, not a
+// spec requirement: EIP-712 says the JSON payload SHOULD declare it. A
+// stricter/native signer (plausibly what a mobile wallet app uses under
+// the hood, as opposed to the browser-JS libraries every earlier test in
+// this debugging session went through) could derive an incomplete or
+// differently-ordered domain hash without it — computing a different
+// struct hash than the facilitator, which would explain a signature that
+// looks well-formed but doesn't recover to the signing address.
+const DOMAIN_FIELD_TYPES: Record<string, string> = {
+  name: 'string',
+  version: 'string',
+  chainId: 'uint256',
+  verifyingContract: 'address',
+  salt: 'bytes32',
+};
+
+function withExplicitDomainType(message: {
+  domain: Record<string, unknown>;
+  types: Record<string, unknown>;
+  primaryType: string;
+  message: Record<string, unknown>;
+}) {
+  if (message.types.EIP712Domain) return message;
+  const EIP712Domain = Object.keys(message.domain)
+    .filter(key => key in DOMAIN_FIELD_TYPES)
+    .map(name => ({ name, type: DOMAIN_FIELD_TYPES[name] }));
+  return { ...message, types: { EIP712Domain, ...message.types } };
+}
+
 function createSigner(address: `0x${string}`, request: WalletRequestFn): ClientEvmSigner {
   return {
     address,
     async signTypedData(message) {
-      const signature = await request(
-        { method: 'eth_signTypedData_v4', params: [address, sanitizeBigInts(message)] },
-        X_LAYER,
-      );
+      const wireMessage = withExplicitDomainType(sanitizeBigInts(message));
+      const signature = await request({ method: 'eth_signTypedData_v4', params: [address, wireMessage] }, X_LAYER);
       return signature as `0x${string}`;
     },
   };
