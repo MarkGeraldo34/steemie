@@ -39,6 +39,11 @@ function extractAddress(session: SessionLike) {
   return account ? (account.split(':').pop() ?? null) : null;
 }
 
+export type WalletRequestFn = (
+  args: { method: string; params?: unknown[] },
+  chain?: string,
+) => Promise<unknown>;
+
 export function useOkxWallet() {
   const [address, setAddress] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
@@ -93,5 +98,10 @@ export function useOkxWallet() {
     setAddress(null);
   }, []);
 
-  return { address, connecting, error, connect, disconnect };
+  const request = useCallback<WalletRequestFn>(async (args, chain) => {
+    const ui = await getConnectUI();
+    return ui.request(args, chain);
+  }, []);
+
+  return { address, connecting, error, connect, disconnect, request };
 }
