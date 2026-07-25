@@ -10,58 +10,22 @@ import { WalletConnectButton } from '@/components/WalletConnectButton';
 import { EthosScoreBadge } from '@/components/EthosScoreBadge';
 import { PremiumRiskCheck } from '@/components/PremiumRiskCheck';
 import { createMarkdownComponents, type EthosByHandle } from '@/components/markdownComponents';
+import { collectEthosByHandle as collectEthosByHandleFromToolOutputs } from '@/lib/ethos-handle-map';
 import type { EthosLevel } from '@/lib/ethos-api';
 
-type Lead = {
-  postedBy: string;
-  postedByProfileUrl: string;
-  ethosScore: number | null;
-  ethosLevel: EthosLevel | null;
-};
-
 /**
- * Every handle a tool surfaced anywhere in this message (search leads, or a
- * standalone genuineness lookup), keyed by lowercased handle — lets an
- * [@handle](profileUrl) link in the write-up become a click-to-reveal Ethos
- * dropdown instead of a plain link.
+ * Adapts this message's UI-message tool parts (type: "tool-<name>", state,
+ * output) to the {toolName, output} shape the shared extractor expects, then
+ * builds the handle -> Ethos map used to turn [@handle](profileUrl) links in
+ * the write-up into click-to-reveal dropdowns instead of plain links.
  */
 function collectEthosByHandle(parts: CryptoIntelAgentUIMessage['parts']): EthosByHandle {
-  const map: EthosByHandle = {};
+  const toolOutputs = parts
+    .filter((part): part is typeof part & { state: string; output?: unknown } => part.type.startsWith('tool-'))
+    .filter(part => part.state === 'output-available')
+    .map(part => ({ toolName: part.type.replace(/^tool-/, ''), output: part.output }));
 
-  const add = (handle: string | undefined, profileUrl: string | undefined, score: number | null, level: EthosLevel | null) => {
-    if (!handle || !profileUrl) return;
-    map[handle.toLowerCase()] = { profileUrl, ethosScore: score, ethosLevel: level };
-  };
-
-  for (const part of parts) {
-    if (!part.type.startsWith('tool-')) continue;
-    const toolPart = part as { type: string; state: string; output?: unknown };
-    if (toolPart.state !== 'output-available') continue;
-
-    if (toolPart.type === 'tool-twitterGenuineness') {
-      const output = toolPart.output as {
-        handle?: string;
-        profileUrl?: string;
-        ethos?: { profile?: { ethosScore: number; level: EthosLevel } };
-      };
-      add(output.handle, output.profileUrl, output.ethos?.profile?.ethosScore ?? null, output.ethos?.profile?.level ?? null);
-      continue;
-    }
-
-    let leads: Lead[] | undefined;
-    if (toolPart.type === 'tool-raffles') {
-      leads = (toolPart.output as { raffles?: Lead[] })?.raffles;
-    } else if (toolPart.type === 'tool-tokenSales') {
-      leads = (toolPart.output as { sales?: Lead[] })?.sales;
-    } else if (toolPart.type === 'tool-whitelistNft') {
-      leads = (toolPart.output as { whitelistLeads?: { leads?: Lead[] } })?.whitelistLeads?.leads;
-    }
-    for (const lead of leads ?? []) {
-      add(lead.postedBy, lead.postedByProfileUrl, lead.ethosScore, lead.ethosLevel);
-    }
-  }
-
-  return map;
+  return collectEthosByHandleFromToolOutputs(toolOutputs);
 }
 
 const TOOL_LABELS: Record<string, string> = {

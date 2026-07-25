@@ -5,9 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useOkxWallet } from '@/lib/wallet/useOkxWallet';
 import { fetchWithWalletPayment, PaymentDeclinedError } from '@/lib/wallet/x402Payer';
-import { createMarkdownComponents } from './markdownComponents';
-
-const markdownComponents = createMarkdownComponents();
+import { createMarkdownComponents, type EthosByHandle } from './markdownComponents';
 
 type Status = 'idle' | 'paying' | 'researching' | 'done' | 'error';
 
@@ -16,6 +14,7 @@ export function PremiumRiskCheck() {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [report, setReport] = useState<string | null>(null);
+  const [ethosByHandle, setEthosByHandle] = useState<EthosByHandle>({});
   const [error, setError] = useState<string | null>(null);
 
   const busy = status === 'paying' || status === 'researching';
@@ -41,12 +40,13 @@ export function PremiumRiskCheck() {
       );
       setStatus('researching');
 
-      const data = (await res.json()) as { report?: string; error?: string };
+      const data = (await res.json()) as { report?: string; ethosByHandle?: EthosByHandle; error?: string };
       if (!res.ok || !data.report) {
         throw new Error(data.error ?? `Request failed (HTTP ${res.status})`);
       }
 
       setReport(data.report);
+      setEthosByHandle(data.ethosByHandle ?? {});
       setStatus('done');
     } catch (err) {
       setStatus('error');
@@ -108,7 +108,7 @@ export function PremiumRiskCheck() {
 
       {report && (
         <div className="mt-4 rounded-xl border border-zinc-200 bg-white p-3">
-          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={createMarkdownComponents(ethosByHandle)}>
             {report}
           </ReactMarkdown>
         </div>
