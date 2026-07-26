@@ -8,6 +8,8 @@ import {
   NATIVE_SYMBOLS,
   type Chain,
 } from '../chains';
+import { etherscanCall, sleep } from '../etherscan';
+import { mapWithConcurrency } from '../concurrency';
 
 const MAX_TOKENS_PRICED = 15;
 const CHAIN_CONCURRENCY = 2;
@@ -27,46 +29,6 @@ type EtherscanTokenTx = {
   tokenSymbol: string;
   tokenDecimal: string;
 };
-
-type EtherscanResult = { status: string; message: string; result: unknown };
-
-// Etherscan's free tier reports rate-limiting as an in-body status:"0" (not
-// an HTTP 429), e.g. message "NOTOK" / result "Max rate limit reached" — so
-// a plain non-'1' status can mean either "rate-limited" or "genuinely no
-// data". This retries once on any non-'1' status before giving up, so a
-// rate-limited call across 32 chains doesn't get silently misread as "wallet
-// has nothing here".
-async function etherscanCall(params: Record<string, string>, apiKey: string): Promise<EtherscanResult> {
-  const url = new URL('https://api.etherscan.io/v2/api');
-  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-  url.searchParams.set('apikey', apiKey);
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const res = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
-    const data = (await res.json()) as EtherscanResult;
-    if (data.status === '1' || attempt === 1) return data;
-    await sleep(500);
-  }
-  // unreachable, satisfies TS
-  return { status: '0', message: 'NOTOK', result: [] };
-}
-
-// Runs async jobs with a concurrency cap so we don't burst past Etherscan's
-// free-tier rate limit (3 req/sec, confirmed by testing) when checking many
-// token balances — or many chains — at once.
-async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let next = 0;
-  async function worker() {
-    while (next < items.length) {
-      const i = next++;
-      results[i] = await fn(items[i]);
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
-  return results;
-}
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // CoinGecko's free/keyless tier caps /simple/token_price/{platform} at ONE
 // contract address per request (error_code 10012 if you send more) —
