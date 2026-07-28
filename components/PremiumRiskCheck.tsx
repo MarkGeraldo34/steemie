@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { useOkxWallet } from '@/lib/wallet/useOkxWallet';
 import { fetchWithWalletPayment } from '@/lib/wallet/x402Payer';
 import { createMarkdownComponents, type EthosByHandle } from './markdownComponents';
+import { ShareButton } from './ShareButton';
 
 type Status = 'idle' | 'paying' | 'researching' | 'done' | 'error';
 
@@ -110,6 +111,9 @@ export function PremiumRiskCheck() {
           <ReactMarkdown remarkPlugins={[remarkGfm]} components={createMarkdownComponents(ethosByHandle)}>
             {report}
           </ReactMarkdown>
+          <div className="mt-3 border-t border-zinc-100 pt-3">
+            <ShareButton query={query} report={report} ethosByHandle={ethosByHandle} source="premium" />
+          </div>
         </div>
       )}
     </div>

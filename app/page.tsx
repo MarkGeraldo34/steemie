@@ -9,6 +9,7 @@ import type { CryptoIntelAgentUIMessage } from '@/lib/agents/crypto-intel-agent'
 import { EthosScoreBadge } from '@/components/EthosScoreBadge';
 import { PremiumRiskCheck } from '@/components/PremiumRiskCheck';
 import { createMarkdownComponents, type EthosByHandle } from '@/components/markdownComponents';
+import { ShareButton } from '@/components/ShareButton';
 import { collectEthosByHandle as collectEthosByHandleFromToolOutputs } from '@/lib/ethos-handle-map';
 import type { EthosLevel } from '@/lib/ethos-api';
 
@@ -148,7 +149,7 @@ export default function Home() {
                         message.role === 'user' ? undefined : collectEthosByHandle(message.parts);
                       const markdownComponents = ethosByHandle && createMarkdownComponents(ethosByHandle);
 
-                      return message.parts.map((part, i) => {
+                      const renderedParts = message.parts.map((part, i) => {
                         if (part.type === 'text') {
                           if (message.role === 'user') {
                             return (
@@ -207,6 +208,39 @@ export default function Home() {
 
                         return null;
                       });
+
+                      if (message.role === 'user' || isLoadingThisMessage) {
+                        return renderedParts;
+                      }
+
+                      const reportText = message.parts
+                        .filter((part): part is typeof part & { text: string } => part.type === 'text')
+                        .map(part => part.text)
+                        .join('\n\n');
+                      const previousMessage = messageIndex > 0 ? messages[messageIndex - 1] : undefined;
+                      const userQuery =
+                        previousMessage?.role === 'user'
+                          ? previousMessage.parts
+                              .filter((part): part is typeof part & { text: string } => part.type === 'text')
+                              .map(part => part.text)
+                              .join('\n\n')
+                          : '';
+
+                      return (
+                        <>
+                          {renderedParts}
+                          {reportText.trim() && userQuery.trim() && (
+                            <div className="mt-1.5">
+                              <ShareButton
+                                query={userQuery}
+                                report={reportText}
+                                ethosByHandle={ethosByHandle ?? {}}
+                                source="chat"
+                              />
+                            </div>
+                          )}
+                        </>
+                      );
                     })()}
                   </div>
                 </div>
