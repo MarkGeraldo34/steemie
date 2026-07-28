@@ -104,10 +104,6 @@ export function PremiumRiskCheck() {
           0.07 USDT · X Layer
         </span>
       </div>
-      <p className="mb-2 text-xs text-zinc-500">
-        Pay per check to get a focused, evidence-based read on whether a token sale, NFT/whitelist
-        mint, or raffle is worth pursuing.
-      </p>
       <p className="mb-3 flex items-center gap-1.5 text-xs text-zinc-400">
         <span aria-hidden>🎁</span>
         Every {rewardEveryNUses}th check earns {rewardAmountFormatted} STEEM.
