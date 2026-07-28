@@ -8,9 +8,9 @@ type Lead = {
 type ToolOutputEntry = { toolName: string; output: unknown };
 
 /**
- * Every handle a tool call surfaced (search leads, or a standalone
- * genuineness lookup), keyed by lowercased handle — lets an
- * [@handle](profileUrl) markdown link become a click-to-reveal Ethos
+ * Every handle a tool call surfaced (search leads, a standalone genuineness
+ * lookup, or a tweets/personality lookup), keyed by lowercased handle — lets
+ * an [@handle](profileUrl) markdown link become a click-to-reveal Ethos
  * dropdown instead of a plain link. Shared between the streaming chat
  * (UI message tool parts, adapted to this {toolName, output} shape by the
  * caller) and the non-streaming premium-research route
@@ -39,6 +39,17 @@ export function collectEthosByHandle(toolOutputs: ToolOutputEntry[]): EthosByHan
         ethos?: { profile?: { ethosScore: number; level: EthosLevel } };
       };
       add(o.handle, o.profileUrl, o.ethos?.profile?.ethosScore ?? null, o.ethos?.profile?.level ?? null);
+      continue;
+    }
+
+    if (toolName === 'twitterTweets' || toolName === 'twitterPersonality') {
+      // Neither tool looks up Ethos data (that's twitterGenuineness's job),
+      // but the agent is instructed to link the handle it fetched the same
+      // way as any other mention — add it with no score/level so the
+      // dropdown still renders (as the "No Ethos data" badge) instead of
+      // falling back to a plain link.
+      const o = output as { handle?: string; profileUrl?: string };
+      add(o.handle, o.profileUrl, null, null);
       continue;
     }
 
