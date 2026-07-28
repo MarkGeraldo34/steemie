@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { withX402 } from '@x402/next';
 import { cryptoIntelAgent } from '@/lib/agents/crypto-intel-agent';
 import { x402Resource, premiumResearchRouteConfig } from '@/lib/x402-server';
 import { collectEthosByHandle } from '@/lib/ethos-handle-map';
 import type { EthosByHandle } from '@/components/markdownComponents';
+import { maybeRewardPremiumUse } from '@/lib/rewards/handle-premium-reward';
 
 // The research agent runs a multi-step tool loop (X API, Ethos, Etherscan,
 // Claude) that can take longer than the platform default — extend the
@@ -52,6 +53,11 @@ const handler = async (
   const ethosByHandle = collectEthosByHandle(
     result.toolResults.map(r => ({ toolName: r.toolName, output: r.output })),
   );
+
+  // Runs after the response is sent — the buyer already has their report by
+  // the time we count this use / potentially send a reward, so it adds no
+  // latency to the paid request, but the function is kept alive to finish it.
+  after(() => maybeRewardPremiumUse(request));
 
   return NextResponse.json({ report: result.text, ethosByHandle });
 };

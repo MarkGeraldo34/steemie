@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useOkxWallet } from '@/lib/wallet/useOkxWallet';
@@ -10,6 +10,13 @@ import { ShareButton } from './ShareButton';
 
 type Status = 'idle' | 'paying' | 'researching' | 'done' | 'error';
 
+interface UsageCountResponse {
+  count: number;
+  usesUntilReward: number;
+  rewardEveryNUses: number;
+  rewardAmountSteem: string;
+}
+
 export function PremiumRiskCheck() {
   const { address, connecting, connect, request } = useOkxWallet();
   const [query, setQuery] = useState('');
@@ -17,8 +24,33 @@ export function PremiumRiskCheck() {
   const [report, setReport] = useState<string | null>(null);
   const [ethosByHandle, setEthosByHandle] = useState<EthosByHandle>({});
   const [error, setError] = useState<string | null>(null);
+  const [usage, setUsage] = useState<UsageCountResponse | null>(null);
 
   const busy = status === 'paying' || status === 'researching';
+  // This next check is the one that crosses the reward threshold.
+  const earnsRewardNext = usage?.usesUntilReward === 1;
+  const rewardEveryNUses = usage?.rewardEveryNUses ?? 10;
+  const rewardAmountFormatted = usage?.rewardAmountSteem
+    ? Number(usage.rewardAmountSteem).toLocaleString()
+    : '10,000';
+
+  const refreshUsage = useCallback(async () => {
+    if (!address) {
+      setUsage(null);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/rewards/usage-count?address=${address}`);
+      if (!res.ok) return;
+      setUsage(await res.json());
+    } catch {
+      // Non-critical — the check still works without the reward hint.
+    }
+  }, [address]);
+
+  useEffect(() => {
+    refreshUsage();
+  }, [refreshUsage]);
 
   const submit = async () => {
     if (!query.trim() || busy) return;
@@ -49,6 +81,10 @@ export function PremiumRiskCheck() {
       setReport(data.report);
       setEthosByHandle(data.ethosByHandle ?? {});
       setStatus('done');
+      // The server increments the usage count via next/server's after(),
+      // which runs just after this response was sent — give it a moment
+      // before refetching so the badge doesn't read one check stale.
+      setTimeout(refreshUsage, 1500);
     } catch (err) {
       setStatus('error');
       // Surface the real message rather than a blanket "wallet rejected"
@@ -68,10 +104,22 @@ export function PremiumRiskCheck() {
           0.07 USDT · X Layer
         </span>
       </div>
-      <p className="mb-3 text-xs text-zinc-500">
+      <p className="mb-2 text-xs text-zinc-500">
         Pay per check to get a focused, evidence-based read on whether a token sale, NFT/whitelist
         mint, or raffle is worth pursuing.
       </p>
+      <p className="mb-3 flex items-center gap-1.5 text-xs text-zinc-400">
+        <span aria-hidden>🎁</span>
+        Every {rewardEveryNUses}th check earns {rewardAmountFormatted} STEEM.
+      </p>
+
+      {earnsRewardNext && (
+        <p className="mb-3 flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+          <span aria-hidden>🎉</span>
+          This will be your {usage?.rewardEveryNUses ? `${usage.rewardEveryNUses}th` : '10th'} premium
+          check — you&apos;ll receive {rewardAmountFormatted} STEEM along with your report.
+        </p>
+      )}
 
       <form
         onSubmit={e => {
@@ -100,7 +148,9 @@ export function PremiumRiskCheck() {
               ? 'Confirm in wallet…'
               : status === 'researching'
                 ? 'Researching…'
-                : 'Check — 0.07 USDT'}
+                : earnsRewardNext
+                  ? 'Check — 0.07 USDT (+STEEM!)'
+                  : 'Check — 0.07 USDT'}
         </button>
       </form>
 
