@@ -67,9 +67,9 @@ export default function Home() {
               <div>
                 <h1 className="text-lg font-semibold text-brand">How can I help you today?</h1>
                 <p className="mx-auto mt-2 max-w-md text-sm text-zinc-500">
-                  Ask about ongoing token sales, whitelist/NFT mints, trends, or raffles, check a
-                  wallet&apos;s holdings, and get an evidence-based read on whether an opportunity
-                  looks worth pursuing.
+                  Ask about token sales, whitelist/NFT mints, trends, raffles, crypto Twitter
+                  sentiment/handles, or wallet holdings — get an evidence-based read on whether
+                  it&apos;s worth pursuing.
                 </p>
               </div>
               <div className="grid w-full max-w-lg grid-cols-1 gap-2 sm:grid-cols-2">
