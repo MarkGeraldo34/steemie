@@ -105,7 +105,20 @@ export function PremiumRiskCheck() {
         </span>
       </div>
       <p className="mb-3 flex items-center gap-1.5 text-xs text-zinc-400">
-        <span aria-hidden>🎁</span>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-3.5 w-3.5 shrink-0 text-brand"
+        >
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+          <path d="m3.3 7 8.7 5 8.7-5" />
+          <path d="M12 22V12" />
+        </svg>
         Every {rewardEveryNUses}th check earns {rewardAmountFormatted} STEEM.
       </p>
 
