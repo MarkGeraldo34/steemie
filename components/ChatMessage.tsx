@@ -20,6 +20,7 @@ const TOOL_LABELS: Record<string, string> = {
   'tool-twitterGenuineness': 'Checking account genuineness',
   'tool-twitterTweets': 'Fetching tweets',
   'tool-twitterPersonality': 'Analyzing tone & personality',
+  'tool-twitterSentiment': 'Gauging sentiment',
 };
 
 /**

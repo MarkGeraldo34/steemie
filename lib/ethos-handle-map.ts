@@ -53,6 +53,18 @@ export function collectEthosByHandle(toolOutputs: ToolOutputEntry[]): EthosByHan
       continue;
     }
 
+    if (toolName === 'twitterSentiment') {
+      // Multi-author search results, not a single-handle lookup — same
+      // no-Ethos-lookup treatment as twitterTweets/twitterPersonality above,
+      // but one entry per distinct tweet author in the sample instead of one
+      // top-level handle.
+      const o = output as { tweets?: Array<{ authorUsername?: string; profileUrl?: string }> };
+      for (const t of o.tweets ?? []) {
+        add(t.authorUsername, t.profileUrl, null, null);
+      }
+      continue;
+    }
+
     let leads: Lead[] | undefined;
     if (toolName === 'raffles') {
       leads = (output as { raffles?: Lead[] })?.raffles;

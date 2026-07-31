@@ -9,6 +9,7 @@ import { walletHoldingsTool } from '../tools/wallet-holdings-tool';
 import { twitterGenuinenessTool } from '../tools/twitter-genuineness-tool';
 import { twitterTweetsTool } from '../tools/twitter-tweets-tool';
 import { twitterPersonalityTool } from '../tools/twitter-personality-tool';
+import { twitterSentimentTool } from '../tools/twitter-sentiment-tool';
 
 export const cryptoIntelAgent = new ToolLoopAgent({
   model: 'anthropic/claude-sonnet-5',
@@ -52,6 +53,12 @@ How to work:
    twitterPersonality with that handle — then read the returned tweet text
    yourself and characterize it; the tool only fetches raw tweets, it does
    not compute personality itself.
+6b. When the user asks about sentiment, mood, vibe, or "what people are
+   saying" about a coin, project, or crypto topic/narrative (not one
+   specific account), call twitterSentiment with that topic — then read the
+   returned tweet text yourself and characterize overall sentiment and
+   recurring themes; the tool only fetches raw tweets, it does not compute
+   sentiment itself.
 7. Cross-reference evidence before concluding anything. If a listing tool and
    the risk-analysis tool disagree, say so explicitly.
 8. NEVER invent data. Most tools in this system still return
@@ -83,11 +90,11 @@ Length & format (applies to every tool result, every search — no exceptions):
   loss.") — never as a plain paragraph, so it always renders in its
   distinct styled color.
 - This applies to token sale, whitelist, trend, raffle, risk-analysis,
-  wallet-holdings, twitterGenuineness, twitterTweets, and twitterPersonality
-  results alike — every search result gets the short-note treatment, not
-  just some tools. (twitterPersonality's tweet-by-tweet reading process is
-  internal — your final write-up is still a short summary, not a
-  tweet-by-tweet transcript.)
+  wallet-holdings, twitterGenuineness, twitterTweets, twitterPersonality, and
+  twitterSentiment results alike — every search result gets the short-note
+  treatment, not just some tools. (twitterPersonality's and
+  twitterSentiment's tweet-by-tweet reading process is internal — your final
+  write-up is still a short summary, not a tweet-by-tweet transcript.)
 
 Linking account mentions (applies everywhere, every tool):
 - Whenever you mention an X/Twitter account by handle anywhere in your
@@ -248,6 +255,35 @@ general Length & format rules above):
 - End with one short clause noting the sample size (e.g. "— based on 23
   recent tweets"), not a separate sentence/paragraph.
 
+How to present twitterSentiment results (extra-short — stricter than the
+general Length & format rules above):
+- This is topic-level (a coin/project/narrative), not one account — many
+  different authors, unlike twitterPersonality. Link each author you quote
+  or cite the normal way: [@handle](profileUrl) using that tweet's own
+  profileUrl, never a guessed URL.
+- Open with one line: "Sentiment: Bullish / Bearish / Mixed / Neutral" (pick
+  exactly one) — a read of what this specific sample of public posts leans
+  toward, NOT a market prediction or trading signal. Never write "will go
+  up/down" or similar in any form.
+- Follow with 2-4 short bullets on recurring themes/reasons behind that
+  read (e.g. a specific news event, a recurring complaint, a shared
+  narrative) — not a list of individual tweets.
+- Optionally cite 1-2 representative tweets as evidence: a short paraphrase
+  (≤15 words) + [@handle](profileUrl), never the full text verbatim and
+  never more than 2.
+- Do not conflate engagement (likes/retweets) with sentiment direction — a
+  highly-liked tweet can be bearish, and vice versa; only use engagement to
+  judge how representative a cited tweet is, never as a sentiment signal
+  itself.
+- This is a snapshot of a public-post sample over the last 7 days, not a
+  scientific survey or the market's actual view — say so in one short
+  clause if the user's question implies more certainty than that (e.g.
+  "what does everyone think" or "what's the consensus").
+- Zero results is a normal outcome (a quiet topic, or the search window
+  simply caught nothing), not a failure — say so in one line rather than
+  forcing a sentiment read. Only call it a tool problem if source is
+  "stub-no-live-data" or an error.
+
 How to reason about risk (once real data is available):
 - Red flags: unverified/unaudited contracts, unlocked or short-duration
   liquidity locks, high top-holder concentration, anonymous teams combined
@@ -354,6 +390,7 @@ Communication rules:
     twitterGenuineness: twitterGenuinenessTool,
     twitterTweets: twitterTweetsTool,
     twitterPersonality: twitterPersonalityTool,
+    twitterSentiment: twitterSentimentTool,
   },
   stopWhen: isStepCount(20),
 });
