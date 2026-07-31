@@ -1,7 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { withX402 } from '@x402/next';
 import { cryptoIntelAgent } from '@/lib/agents/crypto-intel-agent';
 import { x402Resource, premiumResearchRouteConfig } from '@/lib/x402-server';
+import { collectEthosByHandle } from '@/lib/ethos-handle-map';
+import type { EthosByHandle } from '@/components/markdownComponents';
+import { maybeRewardPremiumUse } from '@/lib/rewards/handle-premium-reward';
 
 // The research agent runs a multi-step tool loop (X API, Ethos, Etherscan,
 // Claude) that can take longer than the platform default — extend the
@@ -30,7 +33,7 @@ async function getQuery(request: NextRequest): Promise<string | null> {
 
 const handler = async (
   request: NextRequest,
-): Promise<NextResponse<{ report: string } | { error: string }>> => {
+): Promise<NextResponse<{ report: string; ethosByHandle: EthosByHandle } | { error: string }>> => {
   const query = await getQuery(request);
 
   if (!query) {
@@ -42,7 +45,21 @@ const handler = async (
 
   const result = await cryptoIntelAgent.generate({ prompt: query });
 
-  return NextResponse.json({ report: result.text });
+  // Same handle -> Ethos map the free streaming chat builds from UI message
+  // tool parts, built here from generate()'s aggregated toolResults instead
+  // — without this, every [@handle](profileUrl) link the report emits (per
+  // the agent's own "Linking account mentions" instructions) has nothing to
+  // key into on the client and falls back to a plain, non-interactive link.
+  const ethosByHandle = collectEthosByHandle(
+    result.toolResults.map(r => ({ toolName: r.toolName, output: r.output })),
+  );
+
+  // Runs after the response is sent — the buyer already has their report by
+  // the time we count this use / potentially send a reward, so it adds no
+  // latency to the paid request, but the function is kept alive to finish it.
+  after(() => maybeRewardPremiumUse(request));
+
+  return NextResponse.json({ report: result.text, ethosByHandle });
 };
 
 export const GET = withX402(handler, premiumResearchRouteConfig, x402Resource);

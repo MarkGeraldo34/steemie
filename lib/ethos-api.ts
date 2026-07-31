@@ -3,8 +3,8 @@
  * client-identifying header. See https://developers.ethos.network/.
  *
  * Used by twitter-genuineness-tool.ts (full profile for a single handle)
- * and by raffles/whitelist/token-sales tools (score-only, to badge and sort
- * every poster surfaced by a search).
+ * and by raffles/whitelist/token-sales tools (score-only, to badge each
+ * lead's resolved project/team handle).
  *
  * Important: Ethos measures *community-vouched trust* (peer reviews + ETH
  * vouches), not automated bot/fake-account detection. A brand-new but
@@ -113,32 +113,61 @@ export async function fetchEthosProfile(username: string): Promise<EthosLookupRe
   }
 }
 
+export type ProjectHandle = {
+  handle: string;
+  profileUrl: string;
+  ethosScore: number | null;
+  ethosLevel: EthosLevel | null;
+};
+
 /**
- * Attach {ethosScore, ethosLevel} to every lead (by its `postedBy` handle)
- * and sort descending by score — highest/best Ethos score first, leads with
- * no Ethos profile (unknown reputation) last. Used by raffles/whitelist/
- * token-sales tools so every handle a search surfaces is scored and ordered
- * consistently, not just handles the user explicitly asks to check.
+ * Resolves each lead's project/team handle — the first other account its
+ * tweet actually @mentions (via `mentionedUsernames`, from twitter-api.ts)
+ * — and Ethos-scores it. Drops any lead that tags no one at all: with no
+ * @mention there's no identifiable project/team account to attribute the
+ * lead to, and `postedBy` (whoever merely posted about it — often a random
+ * promoter or bounty hunter, not the project) is intentionally never
+ * surfaced, so a lead with nothing else to go on isn't worth keeping.
+ * `postedBy`/`mentionedUsernames` are consumed here and dropped from the
+ * output entirely — not just left unlinked — so callers can't reintroduce
+ * poster handles by accident.
+ *
+ * Sorts by engagement (likes + retweets) descending — the tweet with the
+ * most interaction about the topic surfaces first, not the one with the
+ * highest-scored account attached.
  */
-export async function attachEthosScoresAndSort<T extends { postedBy: string }>(
-  leads: T[],
-): Promise<(T & { ethosScore: number | null; ethosLevel: EthosLevel | null })[]> {
-  const uniqueHandles = Array.from(new Set(leads.map(l => l.postedBy)));
+export async function resolveProjectHandlesAndSort<
+  T extends { postedBy: string; mentionedUsernames: string[]; engagement: { likes: number; retweets: number } },
+>(leads: T[]): Promise<(Omit<T, 'postedBy' | 'mentionedUsernames'> & { projectHandle: ProjectHandle })[]> {
+  const withProjectHandle = leads.filter(l => l.mentionedUsernames.length > 0);
+
+  const uniqueHandles = Array.from(new Set(withProjectHandle.map(l => l.mentionedUsernames[0])));
   const results = await Promise.all(uniqueHandles.map(async handle => [handle, await fetchEthosProfile(handle)] as const));
 
   const scoreByHandle = new Map(
     results.map(([handle, result]) => [
-      handle,
+      handle.toLowerCase(),
       result.ok ? { ethosScore: result.profile.ethosScore, ethosLevel: result.profile.level } : { ethosScore: null, ethosLevel: null },
     ]),
   );
 
-  const enriched = leads.map(lead => ({
-    ...lead,
-    ...(scoreByHandle.get(lead.postedBy) ?? { ethosScore: null, ethosLevel: null }),
-  }));
+  const enriched = withProjectHandle.map(lead => {
+    // postedBy is intentionally discarded here, not just unlinked — see the
+    // doc comment above for why.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { postedBy, mentionedUsernames, ...rest } = lead;
+    const handle = mentionedUsernames[0];
+    return {
+      ...rest,
+      projectHandle: {
+        handle,
+        profileUrl: `https://x.com/${handle}`,
+        ...(scoreByHandle.get(handle.toLowerCase()) ?? { ethosScore: null, ethosLevel: null }),
+      },
+    };
+  });
 
-  enriched.sort((a, b) => (b.ethosScore ?? -1) - (a.ethosScore ?? -1));
+  enriched.sort((a, b) => b.engagement.likes + b.engagement.retweets - (a.engagement.likes + a.engagement.retweets));
 
   return enriched;
 }

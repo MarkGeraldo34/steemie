@@ -1,7 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { searchRecentTweets } from '../twitter-api';
-import { attachEthosScoresAndSort, type EthosLevel } from '../ethos-api';
+import { resolveProjectHandlesAndSort, type ProjectHandle } from '../ethos-api';
 
 type CoinGeckoTrendingNft = {
   name: string;
@@ -23,7 +23,10 @@ const KEYWORDS =
  *    whitelist spots / free mints. These are unverified leads scraped from
  *    posts, not a vetted whitelist calendar — the exact deadline/mint
  *    date/price live in the tweet text itself (if stated at all) and must
- *    be read by the agent, not parsed here.
+ *    be read by the agent, not parsed here. Only leads that actually
+ *    @mention a project/team account are kept (whoever merely posted about
+ *    it is dropped entirely — see ethos-api.ts's resolveProjectHandlesAndSort),
+ *    sorted by engagement (likes + retweets).
  */
 export const whitelistNftTool = tool({
   description:
@@ -67,13 +70,10 @@ export const whitelistNftTool = tool({
       note: string;
       leads: Array<{
         text: string;
-        postedBy: string;
-        postedByProfileUrl: string;
         postedAt: string;
         url: string;
         engagement: { likes: number; retweets: number };
-        ethosScore: number | null;
-        ethosLevel: EthosLevel | null;
+        projectHandle: ProjectHandle;
       }>;
     } = { source: 'x-api-search', note: '', leads: [] };
 
@@ -84,16 +84,16 @@ export const whitelistNftTool = tool({
       const rawLeads = searchResult.tweets.map(t => ({
         text: t.text,
         postedBy: t.authorUsername,
-        postedByProfileUrl: t.profileUrl,
         postedAt: t.createdAt,
         url: t.url,
         engagement: { likes: t.likeCount, retweets: t.retweetCount },
+        mentionedUsernames: t.mentionedUsernames,
       }));
-      whitelistLeads.leads = await attachEthosScoresAndSort(rawLeads);
+      whitelistLeads.leads = await resolveProjectHandlesAndSort(rawLeads);
       whitelistLeads.note =
         whitelistLeads.leads.length === 0
-          ? 'No matching whitelist/mint tweets found in the last 7 days.'
-          : `${whitelistLeads.leads.length} recent public tweets announcing whitelist spots/mints (last 7 days, search window only — not exhaustive), sorted by Ethos score (highest/most-vetted first, unrated last). UNVERIFIED leads, not a vetted calendar — a decent Ethos score is not a safety guarantee. Deadline/mint date/price, if stated, are in the tweet text itself — read them yourself rather than assuming structure.`;
+          ? 'No matching whitelist/mint leads with an identifiable project/team account found in the last 7 days.'
+          : `${whitelistLeads.leads.length} recent public tweets announcing whitelist spots/mints (last 7 days, search window only — not exhaustive), each naming a project/team account, sorted by engagement (likes + retweets, highest first). UNVERIFIED leads, not a vetted calendar — a decent Ethos score is not a safety guarantee. Deadline/mint date/price, if stated, are in the tweet text itself — read them yourself rather than assuming structure.`;
     }
 
     return {

@@ -3,78 +3,9 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import type { CryptoIntelAgentUIMessage } from '@/lib/agents/crypto-intel-agent';
-import { WalletConnectButton } from '@/components/WalletConnectButton';
-import { EthosScoreBadge } from '@/components/EthosScoreBadge';
+import { ChatMessage } from '@/components/ChatMessage';
 import { PremiumRiskCheck } from '@/components/PremiumRiskCheck';
-import { createMarkdownComponents, type EthosByHandle } from '@/components/markdownComponents';
-import type { EthosLevel } from '@/lib/ethos-api';
-
-type Lead = {
-  postedBy: string;
-  postedByProfileUrl: string;
-  ethosScore: number | null;
-  ethosLevel: EthosLevel | null;
-};
-
-/**
- * Every handle a tool surfaced anywhere in this message (search leads, or a
- * standalone genuineness lookup), keyed by lowercased handle — lets an
- * [@handle](profileUrl) link in the write-up become a click-to-reveal Ethos
- * dropdown instead of a plain link.
- */
-function collectEthosByHandle(parts: CryptoIntelAgentUIMessage['parts']): EthosByHandle {
-  const map: EthosByHandle = {};
-
-  const add = (handle: string | undefined, profileUrl: string | undefined, score: number | null, level: EthosLevel | null) => {
-    if (!handle || !profileUrl) return;
-    map[handle.toLowerCase()] = { profileUrl, ethosScore: score, ethosLevel: level };
-  };
-
-  for (const part of parts) {
-    if (!part.type.startsWith('tool-')) continue;
-    const toolPart = part as { type: string; state: string; output?: unknown };
-    if (toolPart.state !== 'output-available') continue;
-
-    if (toolPart.type === 'tool-twitterGenuineness') {
-      const output = toolPart.output as {
-        handle?: string;
-        profileUrl?: string;
-        ethos?: { profile?: { ethosScore: number; level: EthosLevel } };
-      };
-      add(output.handle, output.profileUrl, output.ethos?.profile?.ethosScore ?? null, output.ethos?.profile?.level ?? null);
-      continue;
-    }
-
-    let leads: Lead[] | undefined;
-    if (toolPart.type === 'tool-raffles') {
-      leads = (toolPart.output as { raffles?: Lead[] })?.raffles;
-    } else if (toolPart.type === 'tool-tokenSales') {
-      leads = (toolPart.output as { sales?: Lead[] })?.sales;
-    } else if (toolPart.type === 'tool-whitelistNft') {
-      leads = (toolPart.output as { whitelistLeads?: { leads?: Lead[] } })?.whitelistLeads?.leads;
-    }
-    for (const lead of leads ?? []) {
-      add(lead.postedBy, lead.postedByProfileUrl, lead.ethosScore, lead.ethosLevel);
-    }
-  }
-
-  return map;
-}
-
-const TOOL_LABELS: Record<string, string> = {
-  'tool-tokenSales': 'Searching token sales',
-  'tool-whitelistNft': 'Searching whitelist / NFT mints',
-  'tool-trends': 'Checking market trends',
-  'tool-raffles': 'Searching raffles',
-  'tool-riskAnalysis': 'Running due-diligence check',
-  'tool-walletHoldings': 'Checking wallet holdings',
-  'tool-twitterGenuineness': 'Checking account genuineness',
-  'tool-twitterTweets': 'Fetching tweets',
-  'tool-twitterPersonality': 'Analyzing tone & personality',
-};
 
 const EXAMPLE_PROMPTS = [
   'Any solid whitelist spots opening this week?',
@@ -103,7 +34,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-dvh flex-col bg-white font-sans">
+    <div className="flex h-dvh flex-col bg-background font-sans">
       <header className="flex shrink-0 items-center justify-between border-b border-zinc-200 bg-white/90 px-4 py-3 backdrop-blur sm:px-6">
         <button
           type="button"
@@ -114,7 +45,14 @@ export default function Home() {
           <img src="/logo.jpg" alt="" className="h-7 w-7 rounded-full" />
           <span className="text-base font-semibold text-brand">Steemie</span>
         </button>
-        <WalletConnectButton />
+        <a
+          href="https://web3.okx.com/xlayer/bridge"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-full border-2 border-brand/40 bg-brand/10 px-3 py-1 text-xs font-medium text-brand transition-opacity hover:opacity-80"
+        >
+          Get USD₮0 on X Layer
+        </a>
       </header>
 
       <main className="flex flex-1 flex-col overflow-y-auto">
@@ -127,11 +65,11 @@ export default function Home() {
               </div>
               <img src="/logo.jpg" alt="" className="h-14 w-14 rounded-full" />
               <div>
-                <h1 className="text-lg font-semibold text-zinc-900">How can I help you today?</h1>
+                <h1 className="text-lg font-semibold text-brand">How can I help you today?</h1>
                 <p className="mx-auto mt-2 max-w-md text-sm text-zinc-500">
-                  Ask about ongoing token sales, whitelist/NFT mints, trends, or raffles, check a
-                  wallet&apos;s holdings, and get an evidence-based read on whether an opportunity
-                  looks worth pursuing.
+                  Ask about token sales, whitelist/NFT mints, trends, raffles, crypto Twitter
+                  sentiment/handles, or wallet holdings — get an evidence-based read on whether
+                  it&apos;s worth pursuing.
                 </p>
               </div>
               <div className="grid w-full max-w-lg grid-cols-1 gap-2 sm:grid-cols-2">
@@ -150,85 +88,20 @@ export default function Home() {
             </div>
           ) : (
             <div className="flex flex-1 flex-col gap-5 py-6">
-              {messages.map(message => (
-                <div
-                  key={message.id}
-                  className={message.role === 'user' ? 'flex justify-end' : 'flex items-start gap-2.5'}
-                >
-                  {message.role !== 'user' && (
-                    <img src="/logo.jpg" alt="" className="mt-0.5 h-6 w-6 shrink-0 rounded-full" />
-                  )}
-                  <div
-                    className={
-                      message.role === 'user'
-                        ? 'max-w-[80%] rounded-2xl rounded-br-sm bg-accent px-4 py-2 text-accent-ink'
-                        : 'max-w-[85%] text-zinc-800'
-                    }
-                  >
-                    {(() => {
-                      const ethosByHandle =
-                        message.role === 'user' ? undefined : collectEthosByHandle(message.parts);
-                      const markdownComponents = ethosByHandle && createMarkdownComponents(ethosByHandle);
+              {messages.map((message, messageIndex) => {
+                const isLoadingThisMessage =
+                  message.role !== 'user' && messageIndex === messages.length - 1 && status !== 'ready';
+                const previousUserMessage = messageIndex > 0 ? messages[messageIndex - 1] : undefined;
 
-                      return message.parts.map((part, i) => {
-                        if (part.type === 'text') {
-                          if (message.role === 'user') {
-                            return (
-                              <p key={i} className="whitespace-pre-wrap text-sm leading-relaxed">
-                                {part.text}
-                              </p>
-                            );
-                          }
-                          return (
-                            <div key={i} className="text-sm leading-relaxed">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-                                {part.text}
-                              </ReactMarkdown>
-                            </div>
-                          );
-                        }
-
-                        if (part.type.startsWith('tool-')) {
-                          const label = TOOL_LABELS[part.type] ?? part.type;
-                          const toolPart = part as {
-                            state: string;
-                            input?: unknown;
-                            output?: unknown;
-                          };
-
-                          const ethosProfile =
-                            part.type === 'tool-twitterGenuineness' && toolPart.state === 'output-available'
-                              ? (
-                                  toolPart.output as {
-                                    ethos?: { profile?: { ethosScore: number; level: EthosLevel } };
-                                  }
-                                )?.ethos?.profile
-                              : undefined;
-
-                          return (
-                            <div key={i} className="my-1 flex flex-wrap items-center gap-2">
-                              <div className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600">
-                                {toolPart.state === 'output-available' ? (
-                                  <span className="mr-1 text-brand">✓</span>
-                                ) : (
-                                  <span className="mr-1">…</span>
-                                )}
-                                {label}
-                                {toolPart.state === 'output-error' && ' (failed)'}
-                              </div>
-                              {ethosProfile && (
-                                <EthosScoreBadge score={ethosProfile.ethosScore} level={ethosProfile.level} />
-                              )}
-                            </div>
-                          );
-                        }
-
-                        return null;
-                      });
-                    })()}
-                  </div>
-                </div>
-              ))}
+                return (
+                  <ChatMessage
+                    key={message.id}
+                    message={message}
+                    isLoading={isLoadingThisMessage}
+                    previousUserMessage={previousUserMessage?.role === 'user' ? previousUserMessage : undefined}
+                  />
+                );
+              })}
             </div>
           )}
         </div>
