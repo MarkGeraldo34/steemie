@@ -97,10 +97,12 @@ export function PremiumRiskCheck() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-2xl rounded-2xl border border-white/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.65),rgba(255,255,255,0.25))] p-4 shadow-[0_12px_40px_-8px_rgba(31,41,55,0.25),inset_0_1px_1px_rgba(255,255,255,0.9),inset_0_-1px_2px_rgba(0,0,0,0.05)] backdrop-blur-xl">
+    <div className="mx-auto w-full max-w-2xl rounded-2xl border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.97),rgba(255,255,255,0.88))] p-4 shadow-[0_24px_48px_-16px_rgba(20,22,12,0.5),0_10px_20px_-10px_rgba(20,22,12,0.35),inset_0_1px_0_rgba(255,255,255,0.95),inset_0_-2px_3px_rgba(0,0,0,0.06)] backdrop-blur-xl">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-brand">Premium Check</h2>
-        <span className="rounded-full bg-brand/15 px-2 py-0.5 text-[11px] font-medium text-brand">
+        <h2 className="text-sm font-semibold text-brand [text-shadow:0_1px_0_rgba(255,255,255,0.8)]">
+          Premium Check
+        </h2>
+        <span className="rounded-full bg-brand/15 px-2 py-0.5 text-[11px] font-medium text-brand shadow-[inset_0_1px_2px_rgba(0,0,0,0.08),inset_0_-1px_0_rgba(255,255,255,0.6)]">
           0.07 USDT · X Layer
         </span>
       </div>
@@ -113,7 +115,7 @@ export function PremiumRiskCheck() {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="h-3.5 w-3.5 shrink-0 text-brand"
+          className="h-3.5 w-3.5 shrink-0 text-brand drop-shadow-[0_1px_0_rgba(255,255,255,0.7)]"
         >
           <polyline points="20 12 20 22 4 22 4 12" />
           <rect x="2" y="7" width="20" height="5" />
@@ -144,12 +146,12 @@ export function PremiumRiskCheck() {
           onChange={e => setQuery(e.target.value)}
           disabled={busy}
           placeholder="Paste a link, contract address, or describe the opportunity…"
-          className="min-w-0 flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 outline-none transition-colors focus:border-brand disabled:opacity-50"
+          className="min-w-0 flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 shadow-[inset_0_1px_3px_rgba(0,0,0,0.08)] outline-none transition-colors focus:border-brand disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={busy || connecting || !query.trim()}
-          className="w-full shrink-0 rounded-full bg-brand px-4 py-2 text-xs font-medium text-white transition-opacity disabled:opacity-50 sm:w-auto"
+          className="w-full shrink-0 rounded-full bg-[linear-gradient(180deg,#9ba064,#7d8153)] px-4 py-2 text-xs font-medium text-white shadow-[0_4px_10px_-2px_rgba(74,77,48,0.6),inset_0_1px_0_rgba(255,255,255,0.35),inset_0_-2px_2px_rgba(0,0,0,0.15)] transition-all active:translate-y-px active:shadow-[0_2px_4px_-1px_rgba(74,77,48,0.5),inset_0_1px_3px_rgba(0,0,0,0.25)] disabled:opacity-50 disabled:active:translate-y-0 sm:w-auto"
         >
           {!address
             ? connecting
