@@ -102,7 +102,7 @@ function ChatMessageInner({ message, isLoading, previousUserMessage }: Props) {
 
       return (
         <div key={i} className="animate-fade-in-up my-1 flex flex-wrap items-center gap-2">
-          <div className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600">
+          <div className="inline-flex items-center text-xs text-zinc-300">
             {toolPart.state === 'output-available' ? (
               <span className="mr-1.5 text-brand">✓</span>
             ) : (

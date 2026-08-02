@@ -48,7 +48,7 @@ export function createMarkdownComponents(ethosByHandle: EthosByHandle = {}) {
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="mx-0.5 inline-flex max-w-full shrink-0 items-center gap-1 rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 align-middle text-xs font-medium whitespace-nowrap text-zinc-500 transition-colors hover:border-accent/40 hover:text-accent"
+            className="mx-0.5 inline-flex max-w-full shrink-0 items-center gap-1 rounded-full bg-accent px-2 py-0.5 align-middle text-xs font-medium whitespace-nowrap text-accent-ink transition-opacity hover:opacity-80"
           >
             View post ↗
           </a>
