@@ -10,7 +10,7 @@ import { PremiumRiskCheck } from '@/components/PremiumRiskCheck';
 const EXAMPLE_PROMPTS = [
   'Any solid whitelist spots opening this week?',
   'What token sales are trending right now?',
-  'Is this raffle legit — worth entering?',
+  'What is the personality of my Twitter handle?',
   'Check holdings for 0x1234…abcd',
 ];
 
