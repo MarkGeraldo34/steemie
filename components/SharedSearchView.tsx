@@ -42,7 +42,7 @@ export function SharedSearchView({ query, report, ethosByHandle, source }: Share
 
           <div className="flex items-start gap-2.5">
             <img src="/logo.jpg" alt="" className="mt-0.5 h-6 w-6 shrink-0 rounded-full" />
-            <div className="max-w-[85%] text-sm leading-relaxed text-zinc-800">
+            <div className="max-w-[85%] text-sm leading-relaxed text-zinc-100">
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                 {report}
               </ReactMarkdown>

@@ -151,7 +151,7 @@ function ChatMessageInner({ message, isLoading, previousUserMessage }: Props) {
           className={`mt-0.5 h-6 w-6 shrink-0 rounded-full ${isLoading ? 'animate-spin-slow' : ''}`}
         />
       )}
-      <div className={isUser ? 'max-w-[80%] rounded-2xl rounded-br-sm bg-accent px-4 py-2 text-accent-ink' : 'max-w-[85%] text-zinc-800'}>
+      <div className={isUser ? 'max-w-[80%] rounded-2xl rounded-br-sm bg-accent px-4 py-2 text-accent-ink' : 'max-w-[85%] text-zinc-100'}>
         {bubble}
       </div>
     </div>

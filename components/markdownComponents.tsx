@@ -35,7 +35,7 @@ export function createMarkdownComponents(ethosByHandle: EthosByHandle = {}) {
     // the styled color that gives it, regardless of the exact wording,
     // which varies response to response.
     blockquote: (props: React.ComponentProps<'blockquote'>) => (
-      <blockquote className="mb-2 border-l-2 border-brand/40 pl-2 text-sm italic text-brand last:mb-0" {...props} />
+      <blockquote className="mb-2 border-l-2 border-brand/40 pl-2 text-sm italic text-[#c7cc9c] last:mb-0" {...props} />
     ),
     a: ({ href, children }: React.ComponentProps<'a'>) => {
       // Source-tweet permalink: fixed short label regardless of what the
@@ -72,7 +72,12 @@ export function createMarkdownComponents(ethosByHandle: EthosByHandle = {}) {
       const ethos = ethosByHandle[match[3].toLowerCase()];
       if (!ethos) {
         return (
-          <a href={href} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand hover:underline">
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-[#c7cc9c] hover:underline"
+          >
             {children}
           </a>
         );
@@ -90,11 +95,11 @@ export function createMarkdownComponents(ethosByHandle: EthosByHandle = {}) {
       </div>
     ),
     th: (props: React.ComponentProps<'th'>) => (
-      <th className="border border-zinc-200 bg-zinc-50 px-2 py-1 text-left font-medium" {...props} />
+      <th className="border border-zinc-200 bg-zinc-50 px-2 py-1 text-left font-medium text-zinc-800" {...props} />
     ),
     td: (props: React.ComponentProps<'td'>) => <td className="border border-zinc-200 px-2 py-1" {...props} />,
     code: (props: React.ComponentProps<'code'>) => (
-      <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs" {...props} />
+      <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs text-zinc-800" {...props} />
     ),
   };
 }
