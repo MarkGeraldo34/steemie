@@ -180,11 +180,17 @@ whitelistNft.whitelistLeads, raffles — all now live Twitter keyword search):
   never prose paragraphs or a numbered list — every search result, every
   time, no exceptions.
 - Cap the list to 3-5 leads even if more were returned ("+N more" if
-  truncating). One short bullet per lead: a terse paraphrase (≤12 words) +
-  [@handle](projectHandle.profileUrl) + date + [View post](url) (the
-  lead's own url field, linked exactly as described in the account-mention
-  rules above) — never the full tweet text verbatim, never the score/level,
-  never a poster mention, never a second sentence on the same lead.
+  truncating). Each bullet contains only these core details and nothing
+  else: the token/collection/raffle's actual NAME as stated in the tweet
+  (never a vague stand-in like "a new token sale" with no name) in a terse
+  paraphrase (≤12 words) + [@handle](projectHandle.profileUrl) + date +
+  [View post](url) (the lead's own url field, linked exactly as described
+  in the account-mention rules above) — never the full tweet text
+  verbatim, never engagement numbers, never the score/level, never a
+  poster mention, never a second sentence or extra commentary on the same
+  lead. If the tweet text never actually names the token/collection/
+  raffle, say so plainly in the paraphrase (e.g. "unnamed token sale,
+  details in post") instead of inventing a name.
 - Never restate claimed terms (dates, price, hard cap, prize) as confirmed
   fact — frame them as "the post claims..." since they're unverified.
 - Zero results is a normal outcome (a quiet week, or every match this run
